@@ -30,9 +30,14 @@ import java.util.stream.Collectors;
         category = Category.RENDER
 )
 public class Statistics extends Module {
-    public static int gamesPlayed, killCount, deathCount;
+    public static int gamesPlayed, killCount, deathCount, victoryCount;
     public static long startTime = System.currentTimeMillis(), endTime = -1;
     public static final String[] KILL_TRIGGERS = {"by *", "para *", "fue destrozado a manos de *"};
+    public static final String[] WIN_TRIGGERS = {
+            "1st place", "victory!", "winner!", "you won", "you win",
+            "1st place!", "#1!", "mvp", "game over", "place: #1",
+            "you are the last", "won the game", "team wins!"
+    };
 
     @RegisterSubModule(name = "Show Speed Graph")
     public static boolean motionGraph = true;
@@ -271,6 +276,7 @@ public class Statistics extends Module {
 
     private static void updateSize() {
         statistics.put("Games Played", (double) gamesPlayed);
+        statistics.put("Victories",    (double) victoryCount);
         statistics.put("K/D", deathCount == 0 ? (double) killCount : Math.round((double) killCount / deathCount * 100) / 100.0);
         statistics.put("Kills", (double) killCount);
     }
@@ -286,6 +292,11 @@ public class Statistics extends Module {
 
         if (!message.contains(":") && Arrays.stream(KILL_TRIGGERS).anyMatch(message.replace(C.mc.thePlayer.getName(), "*")::contains)) {
             killCount++;
+        }
+        // Victory detection — covers Hypixel BedWars, SkyWars, Duels, Murder Mystery, The Bridge etc.
+        String lowerMsg = message.toLowerCase();
+        if (!message.contains(":") && Arrays.stream(WIN_TRIGGERS).anyMatch(lowerMsg::contains)) {
+            victoryCount++;
         }
         if (messageStr.contains("ClickEvent{action=RUN_COMMAND, value='/play ") || messageStr.contains("Want to play again?")) {
             gamesPlayed++;
@@ -337,6 +348,8 @@ public class Statistics extends Module {
         endTime = -1;
         gamesPlayed = 0;
         killCount = 0;
+        deathCount = 0;
+        victoryCount = 0;
     }
 
     @Override
