@@ -54,7 +54,7 @@ public class SubModule {
             // save config whenever anything changes!
             ModuleManager.saveConfig(Main.baseConfig);
         } catch (Exception e) {
-            e.printStackTrace();
+            Main.LOGGER.error("Failed to set field {} of {} to {}", field.getName(), parentModule, object, e);
             ChatUtil.prefixMessage("&cFailed to set field &f" + field.getName() + " &cof &f" + parentModule + " &cto &f" + object);
         }
     }

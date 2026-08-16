@@ -9,10 +9,10 @@ import java.util.Map;
 
 public class MixinLoader implements IFMLLoadingPlugin {
     public MixinLoader() {
-        System.out.println("["+Main.MOD_NAME+"] mixins initializing!");
+        Main.LOGGER.info("[{}] mixins initializing!", Main.MOD_NAME);
         MixinBootstrap.init();
         Mixins.addConfiguration("mixins." + Main.MOD_ID + ".json");
-        System.out.println("["+Main.MOD_NAME+"] mixins up!");
+        Main.LOGGER.info("[{}] mixins up!", Main.MOD_NAME);
     }
 
     @Override

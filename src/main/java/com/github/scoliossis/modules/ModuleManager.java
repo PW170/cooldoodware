@@ -27,7 +27,7 @@ public class ModuleManager {
     public static void init() {
         for (Class<?> clazz : C.reflections.getTypesAnnotatedWith(RegisterModule.class)) {
             try {
-                System.out.println("Registering module: " + clazz.getSimpleName());
+                Main.LOGGER.info("Registering module: {}", clazz.getSimpleName());
 
                 RegisterModule annotation = clazz.getAnnotation(RegisterModule.class);
 
@@ -73,8 +73,7 @@ public class ModuleManager {
                 modules.put(moduleClazz, m);
                 m.setEnabled(annotation.enabledByDefault());
             } catch (Exception e) {
-                System.err.println("Failed to register module: " + clazz.getSimpleName());
-                e.printStackTrace();
+                Main.LOGGER.error("Failed to register module: {}", clazz.getSimpleName(), e);
             }
         }
 
@@ -229,7 +228,7 @@ public class ModuleManager {
         HashMap<String, LinkedTreeMap<String, Object>> modulesJSON = C.gson.fromJson(configFileText, HashMap.class);
 
         if (!modulesJSON.containsKey(module.getAnnotation().name())) {
-            System.out.println("Warning: " + module.getAnnotation().name() + " module not found, defaulting to " + module.getAnnotation().enabledByDefault());
+            Main.LOGGER.warn("Module config missing: {}. Defaulting to {}", module.getAnnotation().name(), module.getAnnotation().enabledByDefault());
             module.setEnabled(module.getAnnotation().enabledByDefault());
         }
         else {
@@ -246,8 +245,12 @@ public class ModuleManager {
                 if (subModule.getField().getType() == SubCategory.class) continue;
 
                 if (!subModules.containsKey(subModule.getAnnotation().name())) {
-                    // todo: fix defaulting values
-                    System.out.println("Module has no config: " + subModule.getAnnotation().name() + " submodule of " + module.getAnnotation().name() + " not found, defaulting to " + subModule.get());
+                    Main.LOGGER.warn(
+                            "Module config missing submodule: {} of {}. Defaulting to {}",
+                            subModule.getAnnotation().name(),
+                            module.getAnnotation().name(),
+                            subModule.get()
+                    );
                     continue;
                 }
 

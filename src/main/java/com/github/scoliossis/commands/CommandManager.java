@@ -1,5 +1,6 @@
 package com.github.scoliossis.commands;
 
+import com.github.scoliossis.Main;
 import com.github.scoliossis.commands.impl.HelpCommand;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PacketEvent;
@@ -25,9 +26,11 @@ public class CommandManager {
     public static void init() {
         for (Class<?> clazz : C.reflections.getSubTypesOf(Command.class)) {
             try {
-                System.out.println("Registering command: " + clazz.getSimpleName());
+                Main.LOGGER.info("Registering command: {}", clazz.getSimpleName());
                 commands.add((Command) clazz.newInstance());
-            } catch (InstantiationException | IllegalAccessException ignored) { }
+            } catch (InstantiationException | IllegalAccessException e) {
+                Main.LOGGER.error("Failed to register command: {}", clazz.getSimpleName(), e);
+            }
         }
     }
 
