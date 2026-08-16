@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @RegisterModule(
@@ -33,11 +34,9 @@ public class Statistics extends Module {
     public static int gamesPlayed, killCount, deathCount, victoryCount;
     public static long startTime = System.currentTimeMillis(), endTime = -1;
     public static final String[] KILL_TRIGGERS = {"by *", "para *", "fue destrozado a manos de *"};
-    public static final String[] WIN_TRIGGERS = {
-            "1st place", "victory!", "winner!", "you won", "you win",
-            "1st place!", "#1!", "mvp", "game over", "place: #1",
-            "you are the last", "won the game", "team wins!"
-    };
+    private static final Pattern WIN_MESSAGE_PATTERN = Pattern.compile(
+            "(?i).*\\b(1st place!?|#1!?|victory!?|winner!?|won the game|you won(?: the game)?|team wins!?)\\b.*"
+    );
 
     @RegisterSubModule(name = "Show Speed Graph")
     public static boolean motionGraph = true;
@@ -277,8 +276,12 @@ public class Statistics extends Module {
     private static void updateSize() {
         statistics.put("Games Played", (double) gamesPlayed);
         statistics.put("Victories",    (double) victoryCount);
-        statistics.put("K/D", deathCount == 0 ? (double) killCount : Math.round((double) killCount / deathCount * 100) / 100.0);
+        statistics.put("K/D", getKillDeathRatio());
         statistics.put("Kills", (double) killCount);
+    }
+
+    private static double getKillDeathRatio() {
+        return deathCount == 0 ? (double) killCount : Math.round((double) killCount / deathCount * 100) / 100.0;
     }
 
     @SubscribeEvent
@@ -293,9 +296,9 @@ public class Statistics extends Module {
         if (!message.contains(":") && Arrays.stream(KILL_TRIGGERS).anyMatch(message.replace(C.mc.thePlayer.getName(), "*")::contains)) {
             killCount++;
         }
-        // Victory detection — covers Hypixel BedWars, SkyWars, Duels, Murder Mystery, The Bridge etc.
+        // Victory detection should only catch explicit end-of-game messages.
         String lowerMsg = message.toLowerCase();
-        if (!message.contains(":") && Arrays.stream(WIN_TRIGGERS).anyMatch(lowerMsg::contains)) {
+        if (!message.contains(":") && WIN_MESSAGE_PATTERN.matcher(lowerMsg).matches()) {
             victoryCount++;
         }
         if (messageStr.contains("ClickEvent{action=RUN_COMMAND, value='/play ") || messageStr.contains("Want to play again?")) {
@@ -304,6 +307,7 @@ public class Statistics extends Module {
         if (message.contains("You died!")) {
             deathCount++;
         }
+        updateSize();
     }
 
     @SubscribeEvent
@@ -350,6 +354,7 @@ public class Statistics extends Module {
         killCount = 0;
         deathCount = 0;
         victoryCount = 0;
+        updateSize();
     }
 
     @Override

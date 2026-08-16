@@ -1,6 +1,8 @@
 package com.github.scoliossis.modules.impl.combat;
 
+import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import com.github.scoliossis.bridge.net.minecraft.client.multiplayer.PlayerControllerMPBridge;
+import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClickMouseEvent;
 import com.github.scoliossis.events.impl.MotionEvent;
@@ -12,9 +14,17 @@ import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.MathUtil;
 import com.github.scoliossis.utils.minecraft.*;
 import com.github.scoliossis.utils.render.EasingUtil;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.EnumAction;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
+import net.minecraft.network.play.client.C07PacketPlayerDigging;
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.Vec3;
 import org.lwjgl.input.Mouse;
 
@@ -28,7 +38,8 @@ import java.util.stream.Collectors;
         category = Category.COMBAT
 )
 public class KillAura extends Module {
-    // filler settings from my other client
+
+    // ─── Range ────────────────────────────────────────────────────────────────
     @RegisterSubModule(name = "Range")
     public SubCategory rangeSubcategory = new SubCategory();
 
@@ -41,6 +52,7 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "FOV", parent = "Range", min = 1, max = 180)
     public static double FOV = 180;
 
+    // ─── Targeting ────────────────────────────────────────────────────────────
     @RegisterSubModule(name = "Targeting")
     public SubCategory killAuraTargetingSubCategory = new SubCategory();
 
@@ -59,6 +71,7 @@ public class KillAura extends Module {
         Distance, Hurt_Time, Health
     }
 
+    // ─── Rotation ─────────────────────────────────────────────────────────────
     @RegisterSubModule(name = "Rotation")
     public SubCategory rotationsSubcategory = new SubCategory();
 
@@ -96,9 +109,10 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Jitter Size", parent = "Jitter Pitch", min = 0.1, max = 1.5)
     public static double jitterSize = 0.3;
 
-    @RegisterSubModule(name = "Random Point", parent = "Rotation Mode", modeParentString = {"Simple", "Smooth", "Eased", "Snap"}, description = "Picks a random valid roations instead of always the closest")
+    @RegisterSubModule(name = "Random Point", parent = "Rotation Mode", modeParentString = {"Simple", "Smooth", "Eased", "Snap"}, description = "Picks a random valid rotation instead of always the closest")
     public static boolean randomValidRotation = true;
 
+    // ─── Attacking ────────────────────────────────────────────────────────────
     @RegisterSubModule(name = "Attacking")
     public SubCategory attackingSubCat = new SubCategory();
 
@@ -118,14 +132,78 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "CPS Max", min = 0, max = 20, parent = "Attacking")
     public static double cpsMax = 10;
 
+    // ─── Auto Block ───────────────────────────────────────────────────────────
+    @RegisterSubModule(name = "Auto Block")
+    public SubCategory autoBlockSubCat = new SubCategory();
+
+    @RegisterSubModule(name = "Auto Block Range", parent = "Auto Block", max = 6)
+    public static double autoblockRange = 3;
+
+    @RegisterSubModule(name = "AB Through Walls", parent = "Auto Block")
+    public static boolean autoblockThroughWalls = true;
+
+    @RegisterSubModule(name = "Autoblock Mode", parent = "Auto Block", description = "bypahh")
+    public static AutoBlockMode autoblockMode = AutoBlockMode.Blink;
+
+    @RegisterSubModule(name = "Packet Block", parent = "Autoblock Mode", modeParentString = {"Vanilla", "Blink"})
+    public static boolean packetBlock = false;
+
+    @RegisterSubModule(name = "Blink Mode", parent = "Autoblock Mode", modeParentString = "Blink")
+    public static Blink_Mode blinkMode = Blink_Mode.Hypixel;
+
+    @RegisterSubModule(name = "Min Blink Ticks", min = 2, max = 6, parent = "Blink Mode", modeParentString = "Random")
+    public static int minBlinkTicks = 3;
+
+    @RegisterSubModule(name = "Max Blink Ticks", min = 2, max = 6, parent = "Blink Mode", modeParentString = "Random")
+    public static int maxBlinkTicks = 3;
+
+    @RegisterSubModule(name = "Blink Pre", parent = "Autoblock Mode", modeParentString = "Blink", dangerous = true)
+    public static boolean blinkPre = false;
+
+    @RegisterSubModule(name = "Legit Blink", description = "Unblocks randomly to look legit", parent = "Autoblock Mode", modeParentString = "Blink")
+    public static boolean legitBlink = true;
+    @RegisterSubModule(name = "Block Ratio", parent = "Legit Blink")
+    public static double blockRatio = 0.5;
+
+    @AllArgsConstructor
+    public enum Blink_Mode {
+        Hypixel(2),
+        Reduce(3),
+        Random(-1) {
+            @Override
+            public int getBlinkTicks() {
+                return (int) MathUtil.getRandomInRange(minBlinkTicks, maxBlinkTicks + 1);
+            }
+        };
+
+        @Getter
+        public final int blinkTicks;
+    }
+
+    public enum AutoBlockMode {
+        Vanilla, Blink, Fake
+    }
+
+    // ─── Kill Aura state ──────────────────────────────────────────────────────
     private static int nextAttackTick = -1;
     private static int easedRotationTick = 1;
-
     private static EntityLivingBase lastTarget = null;
     private static int switchTargetIndex = 0;
     private static RotationUtil.Rotation lastRotation = null;
 
-    // goes before scaffold because its less important imo
+    // ─── Auto Block state ─────────────────────────────────────────────────────
+    @Getter private static boolean isBlocking, isServerBlocking = false;
+    public static boolean swingQueued = false;
+    public static boolean clickBlockQueued = false;
+
+    private static ItemStack itemInUse = null;
+    private static int blinkTick = 0;
+    private static int nextBlinkTicks = 2;
+    @Getter
+    private static boolean isBlinking = false;
+    private static AutoBlockMode lastAutoblockMode;
+
+    // ─── Kill Aura events ─────────────────────────────────────────────────────
     @SubscribeEvent(priority = 999)
     public static void onRotationEvent(RotationEvent event) {
         if (!shouldRotate()) {
@@ -153,12 +231,11 @@ public class KillAura extends Module {
     public static void tryAttackTarget(PlayerUpdateEvent event) {
         Entity target = WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls);
 
-        if (target == lastTarget) easedRotationTick-=2;
+        if (target == lastTarget) easedRotationTick -= 2;
         if (!shouldAttack()) return;
 
         if (rotations == KillAuraRotations.None) {
             EntityLivingBase bestTarget = getTarget();
-
             if (bestTarget != null && shouldAttackEntity(bestTarget)) attack(bestTarget);
             return;
         }
@@ -171,20 +248,11 @@ public class KillAura extends Module {
         attack(target);
     }
 
-    private static boolean willSwing() {
-        if (!shouldAttack()) return false;
-        if (rotations == KillAuraRotations.None) return true;
-
-        if (!TargetUtil.isValidTarget(WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls), false)) {
-            return swingMisses;
-        }
-
-        return true;
-    }
-
     @SubscribeEvent
     public static void onPlayerMotion(MotionEvent event) {
-        if (lastTarget != null && lastRotation != null && clientSideRotation && rotations != KillAuraRotations.Snap && shouldRotate() && shouldRotateToEntity(lastTarget)) {
+        if (lastTarget != null && lastRotation != null && clientSideRotation
+                && rotations != KillAuraRotations.Snap && shouldRotate()
+                && shouldRotateToEntity(lastTarget)) {
             C.p().rotationYaw = RotationUtil.applyWrap360(C.p().rotationYaw, lastRotation.yaw);
             C.p().rotationPitch = lastRotation.pitch;
         }
@@ -195,6 +263,140 @@ public class KillAura extends Module {
         if (willSwing()) {
             event.setCancelled(true);
         }
+    }
+
+    // ─── Auto Block events ────────────────────────────────────────────────────
+    @SubscribeEvent(priority = 998)
+    public static void tickAutoBlock(PlayerUpdateEvent event) {
+        if (Fucker.getCurrentTarget() != null && Fucker.noAutoblock) {
+            stopBlocking();
+            return;
+        }
+        if (C.p().getHeldItem() != itemInUse || autoblockMode != lastAutoblockMode) {
+            stopBlocking();
+        }
+
+        lastAutoblockMode = autoblockMode;
+
+        List<EntityLivingBase> targets = TargetUtil.getPossibleTargets(autoblockRange, autoblockThroughWalls, true);
+
+        if (targets.isEmpty()) {
+            stopBlocking();
+            return;
+        }
+
+        if (C.p().getHeldItem() != null && C.p().getHeldItem().getItemUseAction() == EnumAction.BLOCK) {
+            tickBlocking();
+        }
+    }
+
+    @SubscribeEvent(priority = 999)
+    public static void tickSwingQueued(PlayerUpdateEvent event) {
+        if (PlayerUtil.canAttack() && swingQueued) {
+            MinecraftBridge.from(C.mc).bridge$clickMouse();
+            swingQueued = false;
+        }
+
+        if (PlayerUtil.canAttack() && clickBlockQueued) {
+            MinecraftBridge.from(C.mc).bridge$sendClickBlockToController(
+                    C.mc.currentScreen == null && C.mc.gameSettings.keyBindAttack.isKeyDown() && C.mc.inGameHasFocus);
+            clickBlockQueued = false;
+        }
+    }
+
+    // ─── Auto Block logic ─────────────────────────────────────────────────────
+    public static boolean isBlockingSwing() {
+        return PlayerUtil.isUsingItem() || PlayerUtil.getLastUnblock() == MovementUtil.ticks;
+    }
+
+    public static void stopBlocking() {
+        setBlocking(false, false);
+
+        if (isBlinking) {
+            blinkTick = 0;
+            isBlinking = false;
+            BlinkUtil.popBlink(true, false);
+        }
+    }
+
+    public static void tickBlocking() {
+        if (autoblockMode == AutoBlockMode.Blink) {
+            boolean shouldBlock = !legitBlink || Math.random() <= blockRatio;
+            switch (blinkTick) {
+                case 0:
+                    if (!setBlocking(true, shouldBlock)) return;
+                    BlinkUtil.popBlink(true, false);
+
+                    if (blinkPre) {
+                        isBlinking = true;
+                        BlinkUtil.pushBlink(true, false);
+                    } else isBlinking = false;
+                    break;
+                case 1:
+                    if (!blinkPre) {
+                        isBlinking = true;
+                        BlinkUtil.pushBlink(true, false);
+                    }
+                    setBlocking(true, false);
+                    break;
+            }
+
+            blinkTick++;
+
+            if (blinkTick > nextBlinkTicks) {
+                blinkTick = 0;
+                nextBlinkTicks = blinkMode.getBlinkTicks();
+            }
+        } else {
+            setBlocking(true, autoblockMode == AutoBlockMode.Vanilla);
+        }
+    }
+
+    private static boolean setBlocking(boolean clientSide, boolean serverSide) {
+        if (serverSide != isServerBlocking) {
+            boolean blockSuccess = tryBlock(serverSide);
+            if (!blockSuccess) return false;
+            isServerBlocking = serverSide;
+        }
+
+        isBlocking = clientSide;
+        itemInUse = C.p().getHeldItem();
+
+        return true;
+    }
+
+    public static boolean canSwingWhileBlocking() {
+        return autoblockMode == AutoBlockMode.Vanilla && ModuleManager.isEnabled(KillAura.class) && isServerBlocking;
+    }
+
+    public static boolean tryBlock(boolean down) {
+        if (down && MovementUtil.getOverriddenKeybinds().containsKey(C.mc.gameSettings.keyBindUseItem)
+                && !MovementUtil.getOverriddenKeybinds().get(C.mc.gameSettings.keyBindUseItem))
+            return false;
+
+        if (packetBlock) {
+            if (down) PacketUtil.sendPacket(new C08PacketPlayerBlockPlacement(C.p().getHeldItem()));
+            else PacketUtil.sendPacket(new C07PacketPlayerDigging(
+                    C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN));
+        } else {
+            KeyBindingBridge.from(C.mc.gameSettings.keyBindUseItem).bridge$setDown(down);
+            if (down) MinecraftBridge.from(C.mc).bridge$rightClickMouse();
+            else C.mc.playerController.onStoppedUsingItem(C.p());
+        }
+
+        return true;
+    }
+
+    // ─── Kill Aura logic ──────────────────────────────────────────────────────
+    private static boolean willSwing() {
+        if (!shouldAttack()) return false;
+        if (rotations == KillAuraRotations.None) return true;
+
+        if (!TargetUtil.isValidTarget(WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls), false)) {
+            return swingMisses;
+        }
+
+        return true;
     }
 
     private static boolean shouldAura() {
@@ -212,7 +414,8 @@ public class KillAura extends Module {
                 && PlayerUtil.canAttack()
                 && (cpsMin != 0 || cpsMax != 0)
                 && !Fucker.shouldRotate()
-                && (isTargetInFOV(lastTarget) || TargetUtil.isValidTarget(WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls), false));
+                && (isTargetInFOV(lastTarget) || TargetUtil.isValidTarget(
+                        WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls), false));
     }
 
     private static EntityLivingBase getTarget() {
@@ -225,16 +428,11 @@ public class KillAura extends Module {
                 .sorted(Comparator.comparingDouble(TargetUtil::getDistanceToEntity))
                 .sorted(Comparator.comparingDouble(entity -> {
                     if (killAuraTarget == KillAuraTargeting.Switch) return entity.getEntityId();
-
                     switch (killAuraSorting) {
-                        case Distance:
-                            return TargetUtil.getDistanceToEntity(entity);
-                        case Health:
-                            return entity.getHealth();
-                        case Hurt_Time:
-                            return entity.hurtTime;
-                        default:
-                            return 0;
+                        case Distance:  return TargetUtil.getDistanceToEntity(entity);
+                        case Health:    return entity.getHealth();
+                        case Hurt_Time: return entity.hurtTime;
+                        default:        return 0;
                     }
                 })).collect(Collectors.toList());
 
@@ -246,21 +444,16 @@ public class KillAura extends Module {
         int targetIndex = 0;
         switch (killAuraTarget) {
             case Single:
-                targetIndex =
-                        (lastTarget != null && sortedTargets.contains(lastTarget) && shouldAttackEntity(lastTarget))
-                        ? sortedTargets.indexOf(lastTarget)
-                        : 0;
+                targetIndex = (lastTarget != null && sortedTargets.contains(lastTarget) && shouldAttackEntity(lastTarget))
+                        ? sortedTargets.indexOf(lastTarget) : 0;
                 break;
             case Switch:
                 switchTargetIndex = switchTargetIndex % sortedTargets.size();
                 int prevSwitchIndex = switchTargetIndex;
-
-                // dont switch onto a target out of range
                 while (!shouldAttackEntity(sortedTargets.get(switchTargetIndex))) {
                     switchTargetIndex = (switchTargetIndex + 1) % sortedTargets.size();
                     if (switchTargetIndex == prevSwitchIndex) break;
                 }
-
                 targetIndex = switchTargetIndex;
                 break;
         }
@@ -269,8 +462,8 @@ public class KillAura extends Module {
         return lastTarget;
     }
 
-    private static boolean shouldAttackEntity(EntityLivingBase EntityLivingBase) {
-        return TargetUtil.getDistanceToEntity(EntityLivingBase) <= killAuraAttackRange;
+    private static boolean shouldAttackEntity(EntityLivingBase entity) {
+        return TargetUtil.getDistanceToEntity(entity) <= killAuraAttackRange;
     }
 
     private static boolean shouldRotate() {
@@ -287,23 +480,26 @@ public class KillAura extends Module {
     private static boolean isTargetInFOV(EntityLivingBase entity) {
         Vec3 rotationPoint = TargetUtil.getTargetRotationPoint(entity, killAuraRotationRange, throughWalls, randomValidRotation);
         if (rotationPoint == null) return false;
-
         return Math.abs(Math.abs(RotationUtil.getCurrentClientRotation().yaw) - Math.abs(RotationUtil.getRotation(rotationPoint).yaw)) % 180 <= FOV;
     }
 
     private static RotationUtil.Rotation getRotation(EntityLivingBase entity) {
         Vec3 targetRotationPoint = TargetUtil.getTargetRotationPoint(entity, killAuraRotationRange, throughWalls, randomValidRotation);
 
-        // should only be null if rotationRange is lower than attack range
         if (targetRotationPoint == null) return PlayerUtil.currentRotation();
 
-        double extraYcoord = jitterPitch ? EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease((MovementUtil.ticks % pitchJitter) / (pitchJitter/2d)) * jitterSize : 0;
-        targetRotationPoint = targetRotationPoint.addVector(0, targetRotationPoint.yCoord >= entity.getEntityBoundingBox().maxY - entity.height / 2 ? -extraYcoord : extraYcoord, 0);
+        double extraYcoord = jitterPitch ? EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease(
+                (MovementUtil.ticks % pitchJitter) / (pitchJitter / 2d)) * jitterSize : 0;
+        targetRotationPoint = targetRotationPoint.addVector(0,
+                targetRotationPoint.yCoord >= entity.getEntityBoundingBox().maxY - entity.height / 2
+                        ? -extraYcoord : extraYcoord, 0);
 
-        if (onlyNecessary && TargetUtil.isValidTarget(WorldUtil.getMouseOver(getCurrentRotation(), killAuraAttackRange, throughWalls), false))
+        if (onlyNecessary && TargetUtil.isValidTarget(
+                WorldUtil.getMouseOver(getCurrentRotation(), killAuraAttackRange, throughWalls), false))
             return getCurrentRotation();
 
-        RotationUtil.Rotation targetRotation = RotationUtil.getRotation(getCurrentRotation(), C.p().getPositionEyes(1), targetRotationPoint);
+        RotationUtil.Rotation targetRotation = RotationUtil.getRotation(
+                getCurrentRotation(), C.p().getPositionEyes(1), targetRotationPoint);
 
         switch (rotations) {
             case Simple:
@@ -338,13 +534,18 @@ public class KillAura extends Module {
         }
     }
 
+    // ─── Module lifecycle ─────────────────────────────────────────────────────
     @Override
-    protected void onEnable() {
-
-    }
+    protected void onEnable() {}
 
     @Override
     protected void onDisable() {
+        stopBlocking();
+    }
 
+    // ─── ArrayList display ────────────────────────────────────────────────────
+    @Override
+    public String arrayListExtraInfo() {
+        return autoblockMode.name();
     }
 }

@@ -64,8 +64,6 @@ public class ESP extends Module {
         }
     }
 
-    // todo: cool colours !!! also this sucks ass, figure out shaders or however normal people do outlines.
-    // called by com.github.scoliossis.mixins.net.minecraft.client.model.ModelPlayerMixin.render
     public static void renderOutline(ModelRenderer modelRenderer, float scale) {
         if (modelRenderer.isHidden || !modelRenderer.showModel) return;
 
@@ -78,7 +76,6 @@ public class ESP extends Module {
         GlStateManager.disableLighting();
         GL11.glLineWidth(outlineWidth);
 
-        // minecraft code for rendering bodies
         GlStateManager.pushMatrix();
         GlStateManager.translate(modelRenderer.offsetX, modelRenderer.offsetY, modelRenderer.offsetZ);
         GlStateManager.translate(modelRenderer.rotationPointX * scale, modelRenderer.rotationPointY * 2 * scale, modelRenderer.rotationPointZ * scale);
@@ -91,23 +88,18 @@ public class ESP extends Module {
         GlStateManager.rotate(modelRenderer.rotateAngleX * (180F / (float)Math.PI), 1.0F, 0.0F, 0.0F);
 
         WorldRenderer renderer = Tessellator.getInstance().getWorldRenderer();
-
         for (ModelBox box : modelRenderer.cubeList) {
             for (TexturedQuad quad : ModelBoxBridge.from(box).bridge$quadList()) {
                 renderer.begin(outlineMode == OutlineMode.Line ? GL11.GL_LINE_LOOP : GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-
                 for (int i = 0; i < 4; ++i) {
                     PositionTextureVertex positiontexturevertex = quad.vertexPositions[i];
                     Render3dUtil.add3DVertexColor(positiontexturevertex.vector3D.xCoord * (double) scale, positiontexturevertex.vector3D.yCoord * (double) scale, positiontexturevertex.vector3D.zCoord * (double) scale, outlineColour);
                 }
-
                 RenderUtil.getTessalator().draw();
             }
         }
 
         GlStateManager.popMatrix();
-        // swag
-
         RenderUtil.resetRender();
         GlStateManager.enableLighting();
         GL11.glLineWidth(1);
@@ -144,7 +136,7 @@ public class ESP extends Module {
         float healthBarHeight = (backgroundHeight - healthBarIndent * 2) * healthPercent;
 
         float absorptionBarHeight = (backgroundHeight - healthBarIndent * 2) * Math.min(extraHealthPercent, 1);
-        
+
         RenderUtil.drawRect(entity.width, 0, backgroundWidth, backgroundHeight, BG_COLOUR);
         RenderUtil.drawRect(entity.width+healthBarIndent, healthBarIndent, healthBarWidth, healthBarHeight, healthBarColour);
         RenderUtil.drawRect(entity.width+healthBarIndent, backgroundHeight-healthBarIndent-absorptionBarHeight, healthBarWidth, absorptionBarHeight, ABSORPTION_COLOUR);
@@ -154,11 +146,9 @@ public class ESP extends Module {
 
     @Override
     protected void onEnable() {
-
     }
 
     @Override
     protected void onDisable() {
-
     }
 }

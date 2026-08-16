@@ -6,7 +6,7 @@ import com.github.scoliossis.bridge.net.minecraft.util.TimerBridge;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.*;
 import com.github.scoliossis.modules.ModuleManager;
-import com.github.scoliossis.modules.impl.combat.AutoBlock;
+import com.github.scoliossis.modules.impl.combat.KillAura;
 import com.github.scoliossis.modules.impl.player.FastPlace;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
@@ -90,11 +90,11 @@ public abstract class MinecraftMixin implements MinecraftBridge {
 
     @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;isPressed()Z", ordinal = 7))
     public boolean onAttemptClick(KeyBinding instance) {
-        if (!PlayerUtil.canAttack() && AutoBlock.isBlocking()) return false;
+        if (!PlayerUtil.canAttack() && KillAura.isBlocking()) return false;
 
         boolean isPressed = instance.isPressed();
 
-        if (isPressed && AutoBlock.canSwingWhileBlocking()) {
+        if (isPressed && KillAura.canSwingWhileBlocking()) {
             this.clickMouse();
         }
 
@@ -105,8 +105,8 @@ public abstract class MinecraftMixin implements MinecraftBridge {
     public boolean onSuccessfulClick(KeyBinding instance) {
         boolean isPressed = instance.isPressed();
 
-        if (isPressed && ModuleManager.isEnabled(AutoBlock.class)) {
-            AutoBlock.swingQueued = true;
+        if (isPressed && ModuleManager.isEnabled(KillAura.class)) {
+            KillAura.swingQueued = true;
             return false;
         }
 
@@ -116,8 +116,8 @@ public abstract class MinecraftMixin implements MinecraftBridge {
     // blehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
     @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;sendClickBlockToController(Z)V"))
     public void onSuccessfulClick(Minecraft instance, boolean b) {
-        if (ModuleManager.isEnabled(AutoBlock.class)) {
-            AutoBlock.clickBlockQueued = true;
+        if (ModuleManager.isEnabled(KillAura.class)) {
+            KillAura.clickBlockQueued = true;
         }
         else {
             this.sendClickBlockToController(this.currentScreen == null && this.gameSettings.keyBindAttack.isKeyDown() && this.inGameHasFocus);

@@ -4,7 +4,7 @@ import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.*;
 import com.github.scoliossis.modules.ModuleManager;
-import com.github.scoliossis.modules.impl.combat.AutoBlock;
+import com.github.scoliossis.modules.impl.combat.KillAura;
 import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.client.C;
 import lombok.Getter;
@@ -17,7 +17,7 @@ import net.minecraft.util.Vec3;
 
 public class PlayerUtil {
     public static boolean canAttack() {
-        return !AutoBlock.isBlockingSwing() || AutoBlock.canSwingWhileBlocking();
+        return !KillAura.isBlockingSwing() || KillAura.canSwingWhileBlocking();
     }
 
     public static boolean attack(Entity target) {
@@ -49,7 +49,7 @@ public class PlayerUtil {
     }
 
     public static boolean isUsingItem() {
-        return C.p().isUsingItem() || AutoBlock.isServerBlocking();
+        return C.p().isUsingItem() || KillAura.isServerBlocking();
     }
 
     @SubscribeEvent(priority = 9000)

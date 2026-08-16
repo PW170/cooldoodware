@@ -1,7 +1,7 @@
 package com.github.scoliossis.mixins.net.minecraft.client.renderer;
 
 import com.github.scoliossis.modules.ModuleManager;
-import com.github.scoliossis.modules.impl.combat.AutoBlock;
+import com.github.scoliossis.modules.impl.combat.KillAura;
 import com.github.scoliossis.modules.impl.render.Animations;
 import com.github.scoliossis.modules.impl.render.NoRender;
 import com.github.scoliossis.utils.client.C;
@@ -48,7 +48,7 @@ public abstract class ItemRendererMixin {
 
     @Redirect(method = "renderItemInFirstPerson", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/AbstractClientPlayer;getItemInUseCount()I"))
     public int onGetItemInUseCount(AbstractClientPlayer instance) {
-        return instance.getItemInUseCount() + (AutoBlock.isBlocking() ? 1 : 0);
+        return instance.getItemInUseCount() + (KillAura.isBlocking() ? 1 : 0);
     }
 
     @Inject(method = "renderPlayerArm", at = @At(value = "HEAD"), cancellable = true)

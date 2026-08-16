@@ -75,7 +75,7 @@ public class FakeLag extends Module {
     }
 
     private static boolean canBlink() {
-        return !AutoBlock.isBlocking() || AutoBlock.autoblockMode != AutoBlock.AutoBlockMode.Blink;
+        return !KillAura.isBlocking() || KillAura.autoblockMode != KillAura.AutoBlockMode.Blink;
     }
 
     @Override

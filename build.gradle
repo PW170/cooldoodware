@@ -20,7 +20,7 @@ apply plugin: "java"
 
 version             = mod_version
 group               = mod_group_id
-archivesBaseName    = mod_name
+archivesBaseName    = "coolware v1"
 
 sourceCompatibility = targetCompatibility   = 1.8
 compileJava.options.encoding                = "UTF-8"
