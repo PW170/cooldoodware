@@ -146,6 +146,7 @@ public class TargetHUD extends Module {
                 } else if (easingIn != -1) {
                     alpha = (float) easingIn;
                 }
+                alpha = MathHelper.clamp_float(alpha, 0f, 1f);
                 int alphaInt = (int) (alpha * 255);
 
                 switch (hudMode) {
