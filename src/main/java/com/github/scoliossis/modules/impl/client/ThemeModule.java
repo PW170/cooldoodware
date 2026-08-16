@@ -33,10 +33,7 @@ public class ThemeModule extends Module {
         return false;
     }
 
-    @SubscribeEvent
-    public static void onClientTickEvent(ClientTickEvent event) {
-        FontUtil.setCurrentFont(FontUtil.Fonts.DM_Sans_Bold);
-    }
+    // Removed onClientTickEvent that repeatedly called setCurrentFont and caused a massive memory leak
 
     public static Color[] getThemeColours() {
         return GRAY_COLOURS;

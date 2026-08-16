@@ -123,6 +123,9 @@ public class ESP extends Module {
         GL11.glPopMatrix();
     }
 
+    private static final Color BG_COLOUR = new Color(22, 22, 22);
+    private static final Color ABSORPTION_COLOUR = new Color(255, 255, 0);
+
     private static void renderHealthBar(EntityLivingBase entity, float partialTicks) {
         GL11.glPushMatrix();
         RenderUtil.glTranslate(Render3dUtil.getRelativeEntityPos(entity, partialTicks));
@@ -131,9 +134,7 @@ public class ESP extends Module {
         float healthPercent = Math.min(entity.getHealth() / entity.getMaxHealth(), 1);
         float extraHealthPercent = TargetUtil.getAbsorption(entity) / entity.getMaxHealth();
 
-        Color backgroundColour = new Color(22, 22, 22);
         Color healthBarColour = RenderUtil.getProgressColour(healthPercent);
-        Color absorptionColour = new Color(255, 255, 0);
 
         float backgroundWidth = 0.1f;
         float backgroundHeight = entity.height;
@@ -144,9 +145,9 @@ public class ESP extends Module {
 
         float absorptionBarHeight = (backgroundHeight - healthBarIndent * 2) * Math.min(extraHealthPercent, 1);
         
-        RenderUtil.drawRect(entity.width, 0, backgroundWidth, backgroundHeight, backgroundColour);
+        RenderUtil.drawRect(entity.width, 0, backgroundWidth, backgroundHeight, BG_COLOUR);
         RenderUtil.drawRect(entity.width+healthBarIndent, healthBarIndent, healthBarWidth, healthBarHeight, healthBarColour);
-        RenderUtil.drawRect(entity.width+healthBarIndent, backgroundHeight-healthBarIndent-absorptionBarHeight, healthBarWidth, absorptionBarHeight, absorptionColour);
+        RenderUtil.drawRect(entity.width+healthBarIndent, backgroundHeight-healthBarIndent-absorptionBarHeight, healthBarWidth, absorptionBarHeight, ABSORPTION_COLOUR);
 
         GL11.glPopMatrix();
     }

@@ -22,6 +22,10 @@ public class FontUtil {
 
     private static final HashMap<Integer, FontTexture> fontTextures = new HashMap<>();
 
+    // Reusable arrays to avoid per-character Color allocations (GC pressure reduction)
+    private static final Color[] SHADOW_COLOURS = new Color[] { new Color(22, 22, 22, 255), new Color(22, 22, 22, 255) };
+    private static final Color[] SINGLE_COLOUR_CACHE = new Color[1];
+
     private final static Graphics2D DUMMY_GRAPHICS = setAntiAliasing(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics());
 
     @AllArgsConstructor
@@ -47,6 +51,7 @@ public class FontUtil {
     }
 
     public static void setCurrentFont(Fonts font) {
+        if (currentFont == font) return;
         fontTextures.clear();
         currentFont = font;
     }
@@ -198,15 +203,10 @@ public class FontUtil {
             Color[] colourFade = RenderUtil.getColorsFade((x + totalWidth)*fadeSpread, characterWidth*fadeSpread, colour, fadeSpeed);
 
             if (dropShadow) {
-                // fun fact: to draw the shadow, the font colour is set to:
-                //  colour = (colour & 16579836) >> 2 | colour & -16777216;
-                // for white, this simplifies down to new Color(126, 126, 126)
-                // which is close to Color.GRAY!
-                Color[] shadowColours = new Color[] {
-                        new Color(22, 22, 22, colourFade[0].getAlpha()),
-                        new Color(22, 22, 22, colourFade[1].getAlpha())
-                };
-                drawCharacter(totalWidth + 1, 1, characterWidth, fontHeight, shadowColours, u, uw);
+                // Reuse static shadow array — update alpha in-place to avoid new Color[] allocation per character
+                SHADOW_COLOURS[0] = new Color(22, 22, 22, colourFade[0].getAlpha());
+                SHADOW_COLOURS[1] = new Color(22, 22, 22, colourFade[1].getAlpha());
+                drawCharacter(totalWidth + 1, 1, characterWidth, fontHeight, SHADOW_COLOURS, u, uw);
             }
             drawCharacter(totalWidth, 0, characterWidth, fontHeight, colourFade, u, uw);
             if (boldStyle) drawCharacter(totalWidth + 1, 0, characterWidth, fontHeight, colourFade, u, uw);
@@ -236,7 +236,9 @@ public class FontUtil {
     }
 
     public static float drawString(String string, float x, float y, int size, Color colour, boolean dropShadow) {
-        return drawStringFade(string, x, y, size, new Color[] {colour}, 0, 0, dropShadow);
+        // Reuse cached array instead of allocating new Color[] on every drawString call
+        SINGLE_COLOUR_CACHE[0] = colour;
+        return drawStringFade(string, x, y, size, SINGLE_COLOUR_CACHE, 0, 0, dropShadow);
     }
 
     public static Random fontRandom = new Random();

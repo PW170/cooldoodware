@@ -54,8 +54,9 @@ public class NoRender extends Module {
         return ModuleManager.isEnabled(NoRender.class) && noNausea;
     }
 
+    private static final Color DEFAULT_FIRE = new Color(1.0F, 1.0F, 1.0F, 0.9F);
     public static Color fireColour() {
-        return ModuleManager.isEnabled(NoRender.class) && fireModifier ? fireColour : new Color(1.0F, 1.0F, 1.0F, 0.9F);
+        return ModuleManager.isEnabled(NoRender.class) && fireModifier ? fireColour : DEFAULT_FIRE;
     }
 
     public static double getFireOffset() {

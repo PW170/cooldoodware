@@ -109,8 +109,8 @@ public class TargetHUD extends Module {
                 // Adjust sizing based on the selected mode
                 switch (hudMode) {
                     case Scalehack:
-                        String healthString = String.format("%.1f", healthNumber);
-                        String distanceString = String.format("%.1f", distance);
+                        String healthString = String.valueOf(Math.round(healthNumber * 10.0) / 10.0);
+                        String distanceString = String.valueOf(Math.round(distance * 10.0) / 10.0);
                         String blockingString = target.entity instanceof AbstractClientPlayer && ((AbstractClientPlayer) target.entity).isBlocking() ? "§cBlocking" : "§aUnblocked";
                         float healthStringWidth = FontUtil.getStringWidth(healthString + " | ", 6);
                         float distanceStringWidth = FontUtil.getStringWidth(distanceString + " | ", 6);
@@ -151,8 +151,8 @@ public class TargetHUD extends Module {
 
                 switch (hudMode) {
                     case Scalehack:
-                        String healthString = String.format("%.1f", healthNumber);
-                        String distanceString = String.format("%.1f", distance);
+                        String healthString = String.valueOf(Math.round(healthNumber * 10.0) / 10.0);
+                        String distanceString = String.valueOf(Math.round(distance * 10.0) / 10.0);
                         String blockingString = target.entity instanceof AbstractClientPlayer && ((AbstractClientPlayer) target.entity).isBlocking() ? "§cBlocking" : "§aUnblocked";
                         float healthStringWidth = FontUtil.getStringWidth(healthString + " | ", 6);
                         float distanceStringWidth = FontUtil.getStringWidth(distanceString + " | ", 6);
@@ -195,7 +195,7 @@ public class TargetHUD extends Module {
                         }
 
                         // Info text
-                        String infoStr = String.format("%.0f%% - %.1fm", healthPercentage * 100, distance);
+                        String infoStr = Math.round(healthPercentage * 100) + "% - " + (Math.round(distance * 10.0) / 10.0) + "m";
                         FontUtil.drawString(infoStr, x + 54, y + 32, 9, new Color(200, 200, 200, alphaInt), true);
                         break;
 
@@ -208,7 +208,7 @@ public class TargetHUD extends Module {
 
                         // Details
                         FontUtil.drawString("Name: " + target.entity.getName(), x + 40, y + 8, 10, new Color(255, 255, 255, alphaInt), true);
-                        FontUtil.drawString("Distance: " + String.format("%.1f", distance) + " Hurt: " + target.entity.hurtTime, x + 40, y + 20, 9, new Color(200, 200, 200, alphaInt), true);
+                        FontUtil.drawString("Distance: " + (Math.round(distance * 10.0) / 10.0) + " Hurt: " + target.entity.hurtTime, x + 40, y + 20, 9, new Color(200, 200, 200, alphaInt), true);
 
                         // Health bar (full width minus padding)
                         float riseBarW = width - 10;
@@ -218,7 +218,7 @@ public class TargetHUD extends Module {
                         }
 
                         // Health text
-                        String healthVal = String.format("%.1f", healthNumber);
+                        String healthVal = String.valueOf(Math.round(healthNumber * 10.0) / 10.0);
                         FontUtil.drawString(healthVal, x + 5 + (riseBarW * healthPercentage) + 4, y + 36, 8, new Color(255, 255, 255, alphaInt), true);
                         break;
 
@@ -241,7 +241,7 @@ public class TargetHUD extends Module {
                         }
 
                         // Health percent text
-                        String novoPercent = String.format("%.0f%%", healthPercentage * 100);
+                        String novoPercent = Math.round(healthPercentage * 100) + "%";
                         float textWidth = FontUtil.getStringWidth(novoPercent, 8);
                         FontUtil.drawString(novoPercent, x + 34 + 41.5f - textWidth / 2f, y + 16, 8, new Color(255, 255, 255, alphaInt), true);
                         break;

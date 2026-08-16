@@ -20,6 +20,12 @@ import java.util.List;
         enabledByDefault = true
 )
 public class ArrayListModule extends Module {
+    // Cached Color constants — avoids allocating new Color objects every frame per module card
+    private static final Color CARD_SHADOW  = new Color(0,   0,   0,   80);
+    private static final Color CARD_BODY    = new Color(26,  26,  34,  220);
+    private static final Color CARD_RIM     = new Color(255, 255, 255, 22);
+    private static final Color CARD_ACCENT  = new Color(140, 140, 140, 200);
+
     @RegisterSubModule(name = "Colour")
     public SubCategory colour = new SubCategory();
 
@@ -119,12 +125,12 @@ public class ArrayListModule extends Module {
                     else animation = 1;
 
                     // Claymorphic card
-                    RenderUtil.drawRoundedRect(x + 1, 1, cardW, cardH, RADIUS, new Color(0, 0, 0, 80)); // shadow
-                    RenderUtil.drawRoundedRect(x, 0, cardW, cardH, RADIUS, new Color(26, 26, 34, 220)); // body
-                    RenderUtil.drawRoundedRect(x + 1, 1, cardW - 2, 2, RADIUS, new Color(255, 255, 255, 22)); // rim
+                    RenderUtil.drawRoundedRect(x + 1, 1, cardW, cardH, RADIUS, CARD_SHADOW); // shadow
+                    RenderUtil.drawRoundedRect(x, 0, cardW, cardH, RADIUS, CARD_BODY); // body
+                    RenderUtil.drawRoundedRect(x + 1, 1, cardW - 2, 2, RADIUS, CARD_RIM); // rim
 
                     // Left accent strip — gray
-                    RenderUtil.drawRoundedRect(x + (pointingRight ? 0 : cardW - 3), CARD_PAD_Y / 2f, 3, cardH - CARD_PAD_Y, 2, new Color(140, 140, 140, 200));
+                    RenderUtil.drawRoundedRect(x + (pointingRight ? 0 : cardW - 3), CARD_PAD_Y / 2f, 3, cardH - CARD_PAD_Y, 2, CARD_ACCENT);
 
                     // Text — white, proper case
                     Color[] colours = dontUseTheme ? customColour.getColours() : ThemeModule.getThemeColours();

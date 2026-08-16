@@ -159,9 +159,9 @@ public class Statistics extends Module {
         float barWidth = contentWidth - 2 * innerPad;
         float percentage = Math.min((playTime[1] + (playTime[2] / 60f)) / 60f, 1f);
         
-        // Track
-        RenderUtil.drawRoundedRect(PAD + innerPad, ptCursor, barWidth, 6, 3f, new Color(20, 20, 25, 200));
-        RenderUtil.drawRoundedRectOutline(PAD + innerPad, ptCursor, barWidth, 6, 3f, 0.5f, new Color(255, 255, 255, 10));
+        // Inner dark track for the bar
+        RenderUtil.drawRoundedRect(PAD + innerPad, ptCursor, barWidth, 6, 3f, CLAY_INNER);
+        RenderUtil.drawRoundedRectOutline(PAD + innerPad, ptCursor, barWidth, 6, 3f, 0.5f, CLAY_HIGHLIGHT);
         
         // Fill
         if (percentage > 0) {
@@ -222,9 +222,9 @@ public class Statistics extends Module {
     }
 
     private static void drawSpeedPlot(float x, float y, float w, float h, Color accent) {
-        // Inset graph track
-        RenderUtil.drawRoundedRect(x, y, w, h, 6, new Color(20, 20, 25, 200));
-        RenderUtil.drawRoundedRectOutline(x, y, w, h, 6, 0.5f, new Color(255, 255, 255, 10));
+        // Inner dark box
+        RenderUtil.drawRoundedRect(x, y, w, h, 6, CLAY_INNER);
+        RenderUtil.drawRoundedRectOutline(x, y, w, h, 6, 0.5f, CLAY_HIGHLIGHT);
 
         if (speeds.size() < 2) return;
 

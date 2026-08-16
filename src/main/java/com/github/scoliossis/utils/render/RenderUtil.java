@@ -495,7 +495,14 @@ public class RenderUtil {
     }
 
     // this is probably stupid, but i dont know how to make shaders and never will probably.
-    // mainly stolen from minecrafts main menu blur
+    // Cache blur colors to prevent allocations in loop
+    private static final Color[] BLUR_COLORS = new Color[50];
+    static {
+        for (int i = 0; i < BLUR_COLORS.length; i++) {
+            BLUR_COLORS[i] = new Color(1, 1, 1, 1 / (i + 1f));
+        }
+    }
+
     public static void drawBlurRect(float x, float y, float w, float h, int iterations) {
         float[] translation = RenderUtil.getCurrentTranslation();
         int screenTexture = getScreenTexture();
@@ -517,9 +524,8 @@ public class RenderUtil {
         float maxV = 1 - ((h + realY) / C.res().getScaledHeight());
 
         for (int j = 0; j <= iterations; j++) {
-            float f = 1 / (j + 1f);
             float f1 = (j - iterations / 2f) / 1024f;
-            Color colour = new Color(1, 1, 1, f);
+            Color colour = j < BLUR_COLORS.length ? BLUR_COLORS[j] : new Color(1, 1, 1, 1 / (j + 1f));
 
             addVertexTextureColor(
                     x, y + h,
@@ -544,32 +550,36 @@ public class RenderUtil {
         }
 
         finishRender();
-        GlStateManager.deleteTexture(screenTexture);
+        // Do not delete texture! It's cached now for performance.
     }
 
+    private static int cachedScreenTexture = -1;
+
     public static int getScreenTexture() {
-        int frameBufferCopy = GlStateManager.generateTexture();
-        GlStateManager.bindTexture(frameBufferCopy);
+        if (cachedScreenTexture == -1) {
+            cachedScreenTexture = GlStateManager.generateTexture();
+            GlStateManager.bindTexture(cachedScreenTexture);
 
-        GL11.glTexImage2D(
-                GL11.GL_TEXTURE_2D,
-                0,
-                GL11.GL_RGBA8,
-                C.mc.displayWidth,
-                C.mc.displayHeight,
-                0,
-                GL11.GL_RGBA,
-                GL11.GL_UNSIGNED_BYTE,
-                (java.nio.ByteBuffer) null
-        );
+            GL11.glTexImage2D(
+                    GL11.GL_TEXTURE_2D,
+                    0,
+                    GL11.GL_RGBA8,
+                    C.mc.displayWidth,
+                    C.mc.displayHeight,
+                    0,
+                    GL11.GL_RGBA,
+                    GL11.GL_UNSIGNED_BYTE,
+                    (java.nio.ByteBuffer) null
+            );
 
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
+        }
 
         GlStateManager.bindTexture(C.mc.getFramebuffer().framebufferTexture);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, frameBufferCopy);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, cachedScreenTexture);
         GL11.glCopyTexSubImage2D(
                 GL11.GL_TEXTURE_2D,
                 0,
@@ -579,7 +589,7 @@ public class RenderUtil {
                 C.mc.displayHeight
         );
 
-        return frameBufferCopy;
+        return cachedScreenTexture;
     }
 
     @AllArgsConstructor
