@@ -82,8 +82,16 @@ public class Statistics extends Module {
         RenderUtil.drawRoundedRect(x + 2, y + 2, w, h, radius, CLAY_SHADOW);
         // Main clay body
         RenderUtil.drawRoundedRect(x, y, w, h, radius, bg);
-        // Top-left highlight simulation for 3D extrusion
-        RenderUtil.drawRoundedRectOutline(x, y, w, h, radius, 1f, CLAY_HIGHLIGHT);
+        // Top rim highlight
+        RenderUtil.drawRoundedRect(x + 1, y + 1, w - 2, 2, radius, CLAY_HIGHLIGHT);
+    }
+
+    // Outer panel with theme accent strip — matches ClickGUI category header style
+    private static void drawClayPanelWithAccent(float x, float y, float w, float h, float radius, Color bg) {
+        drawClayPanel(x, y, w, h, radius, bg);
+        Color ac = accent();
+        Color accentStrip = new Color(ac.getRed(), ac.getGreen(), ac.getBlue(), 140);
+        RenderUtil.drawRoundedRect(x, y, w, 2, radius, accentStrip);
     }
 
     private static double[] renderStatistics() {
@@ -114,8 +122,8 @@ public class Statistics extends Module {
         height = PAD + headerBlock + PAD + statsBlock + PAD + playTimeBlock + (graphBlock > 0 ? PAD + graphBlock - PAD : 0) + PAD;
         width = PANEL_WIDTH;
 
-        // Base Clay Panel
-        drawClayPanel(0, 0, width, height, 12, CLAY_BG);
+        // Base Clay Panel — outer with theme accent strip on top
+        drawClayPanelWithAccent(0, 0, width, height, 12, CLAY_BG);
 
         Color accentColor = accent();
         float contentWidth = width - 2 * PAD;
@@ -203,8 +211,8 @@ public class Statistics extends Module {
         width = PANEL_WIDTH;
         height = PAD * 2 + panelInnerHeight;
 
-        // Base Clay Panel
-        drawClayPanel(0, 0, width, height, 12, CLAY_BG);
+        // Base Clay Panel — outer with theme accent strip on top
+        drawClayPanelWithAccent(0, 0, width, height, 12, CLAY_BG);
 
         // Inner Clay Panel
         drawClayPanel(PAD, PAD, contentWidth, panelInnerHeight, 8, CLAY_INNER);
