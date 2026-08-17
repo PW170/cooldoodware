@@ -2,8 +2,11 @@ package com.github.scoliossis.modules.impl.player;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.MotionEvent;
+import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.events.impl.RenderScoreboardEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
+import com.github.scoliossis.events.impl.RotationEvent;
+import com.github.scoliossis.events.impl.WorldUnloadEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.movement.Scaffold;
@@ -88,8 +91,6 @@ public class Fucker extends Module {
     public static void findTargetAndRotate(RotationEvent event) {
         if (!noScaffold && Scaffold.isShouldScaffold()) return;
 
-        if (justStartedGame) findOwnBed();
-
         if (MovementUtil.ticks - lastBreakTick < ticksBetweenBlocks || C.mc.playerController.getCurrentGameType().isAdventure()) return;
 
         getTarget();
@@ -159,6 +160,16 @@ public class Fucker extends Module {
     }
 
     @SubscribeEvent
+    public static void onPlayerUpdate(PlayerUpdateEvent event) {
+        if (!whitelistBed || !inBedwarsGame) return;
+        
+        // Find own bed if not found yet, and player has recently spawned
+        if (bedHead == null && C.p().ticksExisted < 100 && C.p().onGround) {
+            findOwnBed();
+        }
+    }
+
+    @SubscribeEvent
     public static void checkForStartBedwars(RenderScoreboardEvent event) {
         if (!event.scoreObjective.getDisplayName().contains("BED WARS")) {
             inBedwarsGame = false;
@@ -174,12 +185,22 @@ public class Fucker extends Module {
             String s1 = ScorePlayerTeam.formatPlayerName(scoreplayerteam1, score.getPlayerName());
 
             if (s1.contains("✓")) {
+                if (!inBedwarsGame) {
+                    bedHead = null; // Reset on new game
+                    bedFoot = null;
+                }
                 inBedwarsGame = true;
-                justStartedGame = true;
                 return;
             }
         }
 
+        inBedwarsGame = false;
+    }
+
+    @SubscribeEvent
+    public static void onWorldUnload(WorldUnloadEvent event) {
+        bedHead = null;
+        bedFoot = null;
         inBedwarsGame = false;
     }
 
@@ -203,7 +224,6 @@ public class Fucker extends Module {
             bedHead = !isFoot ? blockPos.offset(facing.getOpposite()) : blockPos;
             bedFoot = isFoot ? blockPos.offset(facing) : blockPos;
 
-            justStartedGame = false;
             return;
         }
     }
