@@ -94,8 +94,6 @@ processResources {
 }
 
 jar {
-    archiveName = "coolware v1.1.jar"
-
     // adds any librarys with addLibrary to the compiled mod
     from(configurations.addLibrary.collect {
         it.isDirectory() ? it : zipTree(it)
