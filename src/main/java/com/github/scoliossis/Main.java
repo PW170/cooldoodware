@@ -10,7 +10,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.client.ClientCommandHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.Display;
@@ -51,7 +50,6 @@ public class Main {
         ModuleManager.init();
         CommandManager.init();
         MinecraftForge.EVENT_BUS.register(new AutoQueueHandler());
-        ClientCommandHandler.instance.registerCommand(new com.github.scoliossis.commands.impl.AutoQueueCommand());
 
         new AuthServer();
     }

@@ -42,8 +42,13 @@ public abstract class Module {
 
             Bus.post(new ModuleStateChangeEvent(this, flag));
 
-            if (enabled) onEnable();
-            else onDisable();
+            if (enabled) {
+                com.github.scoliossis.utils.client.SoundUtil.playSound("/scalehack/sounds/toggleon.wav");
+                onEnable();
+            } else {
+                com.github.scoliossis.utils.client.SoundUtil.playSound("/scalehack/sounds/toggleoff.wav");
+                onDisable();
+            }
         }
     }
 

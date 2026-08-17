@@ -1,49 +1,50 @@
 package com.github.scoliossis.commands.impl;
 
+import com.github.scoliossis.commands.Command;
 import com.github.scoliossis.modules.impl.client.AutoQueueHandler;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.ICommandSender;
 
-public class AutoQueueCommand extends CommandBase {
+public class AutoQueueCommand extends Command {
     @Override
-    public String getCommandName() {
+    public String name() {
         return "autoqueue";
     }
 
     @Override
-    public String getCommandUsage(ICommandSender sender) {
-        return "/autoqueue on|off|mode bedwars|skywars";
-    }
-
-    @Override
-    public void processCommand(ICommandSender sender, String[] args) {
-        if (args.length == 0) return;
+    public boolean execute(String[] args) {
+        if (args.length == 0) return false;
 
         String action = args[0].toLowerCase();
         switch (action) {
             case "on":
                 AutoQueueHandler.setEnabled(true);
-                break;
+                return true;
             case "off":
                 AutoQueueHandler.setEnabled(false);
-                break;
+                return true;
             case "mode":
-                if (args.length >= 2) AutoQueueHandler.setGameMode(args[1]);
-                break;
+                if (args.length < 2) return false;
+                AutoQueueHandler.setGameMode(args[1]);
+                return true;
             case "delay":
-                if (args.length >= 2) {
-                    try {
-                        AutoQueueHandler.setDelayMs(Integer.parseInt(args[1]));
-                    } catch (NumberFormatException ignored) { }
+                if (args.length < 2) return false;
+                try {
+                    AutoQueueHandler.setDelayMs(Integer.parseInt(args[1]));
+                    return true;
+                } catch (NumberFormatException ignored) {
+                    return false;
                 }
-                break;
             default:
-                break;
+                return false;
         }
     }
 
     @Override
-    public int getRequiredPermissionLevel() {
-        return 0;
+    public String[] usage() {
+        return new String[] {
+                "on",
+                "off",
+                "mode bedwars|skywars",
+                "delay <ms>"
+        };
     }
 }
