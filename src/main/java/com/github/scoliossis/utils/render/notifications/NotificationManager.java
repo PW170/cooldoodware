@@ -21,10 +21,10 @@ public class NotificationManager {
     private static final Color CLAY_HIGHLIGHT = new Color(255, 255, 255, 25);
     private static final Color TEXT_MUTED = new Color(190, 190, 200);
 
-    private static final float PAD = 10;
-    private static final float NOTIF_WIDTH = 180;
-    private static final int TITLE_SIZE = 16;
-    private static final int DESC_SIZE = 12;
+    private static final float PAD = 8;
+    private static final float NOTIF_WIDTH = 140;
+    private static final int TITLE_SIZE = 14;
+    private static final int DESC_SIZE = 10;
 
     public static void post(String title, String description, NotificationType type, long durationMs) {
         notifications.add(new Notification(title, description, type, durationMs));

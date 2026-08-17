@@ -3,6 +3,8 @@ package com.github.scoliossis.modules;
 import com.github.scoliossis.Main;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.ModuleStateChangeEvent;
+import com.github.scoliossis.utils.render.notifications.NotificationManager;
+import com.github.scoliossis.utils.render.notifications.NotificationType;
 import lombok.Getter;
 import lombok.Setter;
 import org.lwjgl.input.Keyboard;
@@ -44,9 +46,11 @@ public abstract class Module {
 
             if (enabled) {
                 com.github.scoliossis.utils.client.SoundUtil.playSound("/scalehack/sounds/toggleon.wav");
+                NotificationManager.post("Module Enabled", annotation.name() + " was enabled", NotificationType.SUCCESS, 2000);
                 onEnable();
             } else {
                 com.github.scoliossis.utils.client.SoundUtil.playSound("/scalehack/sounds/toggleoff.wav");
+                NotificationManager.post("Module Disabled", annotation.name() + " was disabled", NotificationType.WARNING, 2000);
                 onDisable();
             }
         }

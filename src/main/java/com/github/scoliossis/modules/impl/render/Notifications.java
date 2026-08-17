@@ -22,7 +22,6 @@ public class Notifications extends Module {
 
     @Override
     protected void onEnable() {
-        NotificationManager.post("Notifications", "Module Enabled", NotificationType.SUCCESS, 2500);
     }
 
     @Override
