@@ -1,82 +1,65 @@
 package com.github.cooldood.screens.ClickGUI;
 
 import com.github.cooldood.modules.Category;
-import com.github.cooldood.modules.impl.client.ClickGUIModule;
 import com.github.cooldood.utils.client.ScreenUtil;
-import com.github.cooldood.utils.render.EasingUtil;
 import com.github.cooldood.utils.render.FontUtil;
 import com.github.cooldood.utils.render.RenderUtil;
-import org.lwjgl.opengl.GL11;
-
-import java.awt.*;
+import java.awt.Color;
 
 public class CategoryRenderer {
-    public final int CATEGORY_HEIGHT = 26;
+    public final int CATEGORY_HEIGHT = 20;
     protected Category currentDraggingCategory = null;
     private float categoryDragStartX = -1;
     private float categoryDragStartY = -1;
 
     public void render(Category category) {
-        // Draw the outer clay panel for just the header
-        ClickGUIScreen.drawClayPanel(CATEGORY_HEIGHT, category.color);
+        float x = ClickGUIScreen.BASE_X;
+        float y = ClickGUIScreen.BASE_Y;
+        float w = ClickGUIScreen.GUI_TAB_WIDTH;
+        float h = CATEGORY_HEIGHT;
 
-        // Category icon/label — centred, DM Sans Bold, proper case style
+        RenderUtil.drawRect(x, y, w, h, ClickGUIScreen.COL_BLUE);
+
         String name = category.name().replaceAll("_", " ");
         String categoryName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
+
         float textH = FontUtil.getFontHeight(ClickGUIScreen.fontSize);
-        float textW = FontUtil.getStringWidth(categoryName, ClickGUIScreen.fontSize);
-        float textX = ClickGUIScreen.BASE_X + (ClickGUIScreen.GUI_TAB_WIDTH / 2f) - (textW / 2f);
-        float textY = ClickGUIScreen.BASE_Y + CATEGORY_HEIGHT / 2f - textH / 2f + 1f;
+        float textY = y + h / 2f - textH / 2f + 1f;
 
-        // Soft accent tint behind the text
-        Color tintColor = new Color(
-                category.color.getRed(),
-                category.color.getGreen(),
-                category.color.getBlue(),
-                30
-        );
-        RenderUtil.drawRoundedRect(
-                ClickGUIScreen.BASE_X + 4,
-                ClickGUIScreen.BASE_Y + 4,
-                ClickGUIScreen.GUI_TAB_WIDTH - 8,
-                CATEGORY_HEIGHT - 8,
-                5, tintColor
-        );
+        // Draw an icon placeholder or just the text
+        String icon = "";
+        switch (categoryName) {
+            case "Combat": icon = "b"; break;
+            case "Movement": icon = "m"; break;
+            case "Player": icon = "p"; break;
+            case "Exploits": icon = "e"; break;
+            case "Visuals": icon = "v"; break;
+            case "Misc": icon = "c"; break;
+            case "Configs": icon = "s"; break;
+        }
 
-        FontUtil.drawString(categoryName, textX, textY, ClickGUIScreen.fontSize, Color.WHITE, true);
-
-        // Small arrow on the right indicating open/closed
-        float arrowX = ClickGUIScreen.BASE_X + ClickGUIScreen.GUI_TAB_WIDTH - 14;
-        float arrowY = ClickGUIScreen.BASE_Y + CATEGORY_HEIGHT / 2f - 2f;
-        RenderUtil.drawArrow(arrowX, arrowY, 6, 4, category.shouldShow(), 1, ClickGUIScreen.COL_TEXT_DIM);
-
-        GL11.glTranslated(0, CATEGORY_HEIGHT, 0);
+        FontUtil.drawString(icon + "  " + categoryName, x + 6, textY, ClickGUIScreen.fontSize, Color.WHITE, false);
     }
 
     public void handleMouse(Category category, int mouseX, int mouseY) {
-        if (ScreenUtil.isMouseOver(ClickGUIScreen.BASE_X, ClickGUIScreen.BASE_Y,
-                ClickGUIScreen.GUI_TAB_WIDTH, CATEGORY_HEIGHT, mouseX, mouseY)) {
+        float renderX = category.renderX;
+        float renderY = category.renderY;
+        float width = ClickGUIScreen.GUI_TAB_WIDTH;
+        float height = CATEGORY_HEIGHT;
 
-            if (ClickGUIScreen.mouseButton == 0) {
-                categoryDragStartX = mouseX - category.posX;
-                categoryDragStartY = mouseY - category.posY;
-                currentDraggingCategory = category;
-            }
-            if (ClickGUIScreen.mouseButton == 1) {
-                category.open = !category.open;
-                EasingUtil.addAnimation(
-                        category.name(),
-                        category.open ? ClickGUIModule.openAnimationLength : ClickGUIModule.closeAnimationLength,
-                        category.open,
-                        category.open ? ClickGUIModule.openAnimation : ClickGUIModule.closeAnimation
-                );
-            }
-            ClickGUIScreen.mouseButton = -1;
+        if (ScreenUtil.isMouseOver(renderX, renderY, width, height, mouseX, mouseY) && ClickGUIScreen.leftMouseDown && currentDraggingCategory == null) {
+            currentDraggingCategory = category;
+            categoryDragStartX = renderX - mouseX;
+            categoryDragStartY = renderY - mouseY;
         }
 
         if (currentDraggingCategory == category) {
-            category.posX = mouseX - categoryDragStartX;
-            category.posY = mouseY - categoryDragStartY;
+            if (ClickGUIScreen.leftMouseDown) {
+                category.posX = mouseX + categoryDragStartX;
+                category.posY = mouseY + categoryDragStartY;
+            } else {
+                currentDraggingCategory = null;
+            }
         }
     }
 }

@@ -7,11 +7,9 @@ import com.github.cooldood.modules.Module;
 import com.github.cooldood.modules.ModuleManager;
 import com.github.cooldood.modules.SubModule;
 import com.github.cooldood.modules.impl.client.ClickGUIModule;
-import com.github.cooldood.screens.ClickGUI.SubModuleRenderers.*;
 import com.github.cooldood.utils.client.C;
 import com.github.cooldood.utils.client.KeybindHandler;
 import com.github.cooldood.utils.client.ScreenUtil;
-import com.github.cooldood.utils.render.EasingUtil;
 import com.github.cooldood.utils.render.FontUtil;
 import com.github.cooldood.utils.render.RenderUtil;
 import net.minecraft.client.Minecraft;
@@ -32,61 +30,26 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ClickGUIScreen extends GuiScreen {
-    // ─── Layout constants ─────────────────────────────────────────────────────
     public static final int fontSize = 9;
-    public static int GUI_TAB_WIDTH = 150;
+    public static int GUI_TAB_WIDTH = 110;
 
-    // The virtual anchor — panels are translated to sit at this local origin.
     public static final int BASE_X = -GUI_TAB_WIDTH / 2;
     public static final int BASE_Y = 0;
 
-    // Claymorphic panel corners
-    public static final float PANEL_RADIUS   = 8f;
-    public static final float MODULE_RADIUS  = 6f;
-    public static final float SUBMOD_RADIUS  = 5f;
+    public static final Color COL_BLUE = new Color(0, 163, 255);
+    public static final Color COL_BG = new Color(20, 20, 20, 220);
 
-    // Horizontal padding so modules are inset from the panel edges
-    public static final int PANEL_PADDING    = 5;
-
-    // ─── Colour palette ───────────────────────────────────────────────────────
-    public static final Color COL_PANEL_BG      = new Color(26, 26, 34, 245);
-    public static final Color COL_MODULE_BG     = new Color(40, 40, 52, 255);
-    public static final Color COL_MODULE_HOVER  = new Color(50, 50, 65, 255);
-    public static final Color COL_SUBMOD_BG     = new Color(32, 32, 42, 255);
-    public static final Color COL_RIM_HIGHLIGHT = new Color(255, 255, 255, 22);
-    public static final Color COL_SHADOW        = new Color(0, 0, 0, 80);
-    public static final Color COL_TOOLTIP       = new Color(20, 20, 28, 210);
-    public static final Color COL_TEXT_DIM      = new Color(160, 160, 180, 255);
-
-    // ─── Runtime state ────────────────────────────────────────────────────────
     public static float fpsMultiplier = 1;
-    public static SubModule currentSubModule;
-    public static int mouseButton = -1;
     public static boolean leftMouseDown = false;
+    public static int mouseButton = -1;
 
-    // ─── Renderer singletons ──────────────────────────────────────────────────
-    protected static final CategoryRenderer categoryRenderer = new CategoryRenderer();
-    protected static final ModuleRenderer moduleRenderer     = new ModuleRenderer();
+    public static Module moduleHovered = null;
+    public static SubModule subModuleHovered = null;
+    public static SubModule currentSubModule = null;
 
-    protected static final BooleanSubModuleRenderer  booleanSubModuleRenderer  = new BooleanSubModuleRenderer();
-    protected static final EnumSubModuleRenderer     enumSubModuleRenderer     = new EnumSubModuleRenderer();
-    protected static final SliderSubModuleRenderer   sliderSubModuleRenderer   = new SliderSubModuleRenderer();
-    protected static final ColourModuleRenderer      colourSubModuleRenderer   = new ColourModuleRenderer();
-    protected static final SubCategoryRenderer       subCategoryRenderer       = new SubCategoryRenderer();
+    public static final CategoryRenderer categoryRenderer = new CategoryRenderer();
+    public static final ModuleRenderer moduleRenderer = new ModuleRenderer();
 
-    public static Color secondaryColor = COL_TEXT_DIM;
-
-    // ─── Tooltip state ────────────────────────────────────────────────────────
-    protected static Module    moduleHovered;
-    protected static SubModule subModuleHovered;
-    protected static long      hoverTime;
-
-    private static final long minimumHoverTime    = 500;
-    private static final int  hoverBoxXindent     = 6;
-    private static final int  hoverBoxYindent     = 3;
-    private static final int  hoverBoxTextSize    = 7;
-
-    // ─────────────────────────────────────────────────────────────────────────
     @Override
     public void initGui() {}
 
@@ -104,7 +67,6 @@ public class ClickGUIScreen extends GuiScreen {
         GL11.glPushMatrix();
 
         List<Module> modules = ModuleManager.getModules();
-
         if (!modules.contains(moduleHovered)) moduleHovered = null;
 
         for (Category category : Category.values()) {
@@ -112,28 +74,17 @@ public class ClickGUIScreen extends GuiScreen {
 
             List<Module> modulesInCategory = ModuleManager.getModulesByCategory(category, modules);
 
-            // smooth-drag animation
             category.renderX += (category.posX - category.renderX) / fpsMultiplier;
             if (Math.abs(category.renderX - category.posX) < 0.01) category.renderX = category.posX;
-            float draggingRotationX = MathHelper.clamp_float((category.posX - category.renderX) / 3, -100, 100);
 
             category.renderY += (category.posY - category.renderY) / fpsMultiplier;
             if (Math.abs(category.renderY - category.posY) < 0.01) category.renderY = category.posY;
-            double draggingRotationY = MathHelper.clamp_float((category.posY - category.renderY) / 3, -100, 100);
 
-            if (ClickGUIModule.fancyDragging) {
-                GL11.glTranslated(category.renderX - BASE_X, category.renderY - BASE_Y, 0);
-                GL11.glRotated(draggingRotationX, 0, 0, 1);
-                GL11.glRotated(draggingRotationY, 1, 0, 0);
-            } else {
-                GL11.glTranslated(category.posX - BASE_X, category.posY - BASE_Y, 0);
-            }
+            GL11.glTranslated(category.renderX - BASE_X, category.renderY - BASE_Y, 0);
 
-            // ── category header ──
             categoryRenderer.handleMouse(category, mouseX, mouseY);
             categoryRenderer.render(category);
 
-            // ── scissor + scroll ──
             RenderUtil.glScissor(BASE_X, BASE_Y + categoryRenderer.CATEGORY_HEIGHT,
                     GUI_TAB_WIDTH, C.res().getScaledHeight());
 
@@ -141,121 +92,49 @@ public class ClickGUIScreen extends GuiScreen {
             if (Math.abs(category.scroll - category.renderScroll) < 0.01) category.renderScroll = category.scroll;
 
             GL11.glTranslated(0, category.renderScroll, 0);
+            GL11.glTranslated(0, categoryRenderer.CATEGORY_HEIGHT, 0);
 
-            if (category.shouldShow()) {
-                double categoryAnimationProgress = EasingUtil.getAnimation(category.name());
-                if (categoryAnimationProgress != -1) GL11.glScaled(1, categoryAnimationProgress, 1);
-
-                for (Module module : modulesInCategory) {
-                    moduleRenderer.handleMouse(module, mouseX, mouseY);
-                    moduleRenderer.render(module, mouseX, mouseY);
-
-                    double moduleAnimationProgress = EasingUtil.getAnimation(module.getUniqueKey(""));
-                    if (moduleAnimationProgress != -1) GL11.glScaled(1, moduleAnimationProgress, 1);
-
-                    if (!module.isOpen() && moduleAnimationProgress == -1) continue;
-
+            // Calculate total height first for background
+            float totalHeight = 0;
+            for (Module module : modulesInCategory) {
+                float h = 16;
+                if (module.isOpen()) {
                     for (SubModule subModule : module.getChildren()) {
-                        if (!subModule.shouldRender()) {
-                            if (subModule == subModuleHovered) subModuleHovered = null;
-                            continue;
-                        }
-
-                        double parentAnimationProgress = subModule.getAnimationProgress();
-                        if (parentAnimationProgress != -1) GL11.glScaled(1, parentAnimationProgress, 1);
-
-                        SubModuleRenderer.handle(mouseX, mouseY, subModule);
-
-                        if (parentAnimationProgress != -1) GL11.glScaled(1, 1 / parentAnimationProgress, 1);
+                        if (subModule.shouldRender()) h += 16;
                     }
-
-                    if (moduleAnimationProgress != -1) GL11.glScaled(1, 1 / moduleAnimationProgress, 1);
                 }
+                totalHeight += h;
             }
 
-            // scroll clamping
-            float[] translation = RenderUtil.getCurrentTranslation();
-            float categoryTotalHeight = Math.max(
-                    translation[1] - category.renderY - categoryRenderer.CATEGORY_HEIGHT,
-                    categoryRenderer.CATEGORY_HEIGHT);
+            RenderUtil.drawRect(BASE_X, BASE_Y, GUI_TAB_WIDTH, totalHeight, COL_BG);
 
-            if (ScreenUtil.isMouseOver(BASE_X, BASE_Y - categoryTotalHeight, GUI_TAB_WIDTH, categoryTotalHeight, mouseX, mouseY)) {
+            float currentY = BASE_Y;
+            for (Module module : modulesInCategory) {
+                float h = moduleRenderer.render(module, mouseX, mouseY, currentY);
+                currentY += h;
+            }
+
+            if (ScreenUtil.isMouseOver(category.renderX, category.renderY + categoryRenderer.CATEGORY_HEIGHT, GUI_TAB_WIDTH, C.res().getScaledHeight(), mouseX, mouseY)) {
                 category.scroll += scrolledAmount;
-                scrolledAmount = 0;
             }
+            if (category.scroll > 0) category.scroll = 0;
 
-            if (translation[4] == 1 && category.open) {
-                category.scroll = MathHelper.clamp_float(
-                        category.scroll,
-                        -categoryTotalHeight + category.renderScroll + categoryRenderer.CATEGORY_HEIGHT,
-                        0
-                );
-            }
-
+            GL11.glDisable(GL11.GL_SCISSOR_TEST);;
             GL11.glPopMatrix();
-            RenderUtil.disableScissor();
         }
 
         GL11.glPopMatrix();
-        mouseButton = -1;
 
-        // ── Tooltip ──────────────────────────────────────────────────────────
-        String hoverText = moduleHovered != null
-                ? moduleHovered.getAnnotation().description()
-                : subModuleHovered != null ? subModuleHovered.getAnnotation().description() : "";
-
-        if (!hoverText.isEmpty() && System.currentTimeMillis() - ClickGUIScreen.hoverTime >= minimumHoverTime) {
-            float hoverBoxH = FontUtil.getFontHeight(hoverBoxTextSize) + hoverBoxYindent * 2;
-            int   hoverBoxW = FontUtil.getStringWidth(hoverText, hoverBoxTextSize) + (hoverBoxXindent * 2);
-
-            drawClayTooltip(mouseX + 4, mouseY - hoverBoxH - 4, hoverBoxW, hoverBoxH);
-            FontUtil.drawString(hoverText, mouseX + 4 + hoverBoxXindent, mouseY - hoverBoxH - 4 + hoverBoxYindent,
-                    hoverBoxTextSize, Color.WHITE, true);
+        if (moduleHovered != null && moduleHovered.getAnnotation().description() != null) {
+            String desc = moduleHovered.getAnnotation().description();
+            float bw = FontUtil.getStringWidth(desc, 8) + 8;
+            float bh = FontUtil.getFontHeight(8) + 8;
+            RenderUtil.drawRect(mouseX + 4, mouseY - bh - 4, bw, bh, new Color(0, 0, 0, 200));
+            FontUtil.drawString(desc, mouseX + 8, mouseY - bh, 8, Color.WHITE, false);
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
-
-    // ─── Shared claymorphic panel drawing ─────────────────────────────────────
-
-    public static void drawClayPanel(float panelHeight, Color accentColor) {
-        float x = BASE_X;
-        float y = BASE_Y;
-        float w = GUI_TAB_WIDTH;
-
-        RenderUtil.drawRoundedRect(x + 2, y + 2, w, panelHeight, PANEL_RADIUS, COL_SHADOW);
-        RenderUtil.drawRoundedRect(x, y, w, panelHeight, PANEL_RADIUS, COL_PANEL_BG);
-        RenderUtil.drawRoundedRect(x + 1, y + 1, w - 2, 2, PANEL_RADIUS, COL_RIM_HIGHLIGHT);
-        RenderUtil.drawRect(x, y, w, 2, new Color(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), 120));
-        RenderUtil.drawRoundedRect(x, y, w, 2, PANEL_RADIUS, new Color(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), 120));
-    }
-
-    public static void drawModuleCard(float height, Color bg) {
-        float x = BASE_X + PANEL_PADDING;
-        float y = BASE_Y;
-        float w = GUI_TAB_WIDTH - PANEL_PADDING * 2;
-
-        RenderUtil.drawRoundedRect(x + 1, y + 1, w, height, MODULE_RADIUS, COL_SHADOW);
-        RenderUtil.drawRoundedRect(x, y, w, height, MODULE_RADIUS, bg);
-        RenderUtil.drawRoundedRect(x + 1, y + 1, w - 2, 2, MODULE_RADIUS, COL_RIM_HIGHLIGHT);
-    }
-
-    public static void drawSubModuleCard(float height) {
-        float x = BASE_X + PANEL_PADDING + 4;
-        float y = BASE_Y;
-        float w = GUI_TAB_WIDTH - (PANEL_PADDING + 4) * 2;
-
-        RenderUtil.drawRoundedRect(x, y, w, height, SUBMOD_RADIUS, COL_SUBMOD_BG);
-        RenderUtil.drawRoundedRect(x + 1, y + 1, w - 2, 1, SUBMOD_RADIUS, COL_RIM_HIGHLIGHT);
-    }
-
-    public static void drawClayTooltip(float x, float y, float w, float h) {
-        RenderUtil.drawRoundedRect(x + 1, y + 1, w, h, 5, COL_SHADOW);
-        RenderUtil.drawRoundedRect(x, y, w, h, 5, COL_TOOLTIP);
-        RenderUtil.drawRoundedRect(x + 1, y + 1, w - 2, 2, 5, COL_RIM_HIGHLIGHT);
-    }
-
-    // ─── Keyboard / mouse overrides ───────────────────────────────────────────
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
@@ -295,10 +174,7 @@ public class ClickGUIScreen extends GuiScreen {
         }
     }
 
-    // ─── Category position persistence ────────────────────────────────────────
-
-    private static final String categorySavingFile =
-            Main.extraSavedFeaturesPath + "categoryPositions" + Main.configExtension;
+    private static final String categorySavingFile = Main.extraSavedFeaturesPath + "categoryPositions" + Main.configExtension;
 
     public static void saveCategoryPositions() {
         try {
@@ -324,8 +200,6 @@ public class ClickGUIScreen extends GuiScreen {
                         category.posY = category.renderY = xy.get(1).floatValue();
                     }
                 }
-            } else {
-                System.out.println("No category positions found, saving default positions.");
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
