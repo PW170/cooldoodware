@@ -35,10 +35,10 @@ build/libs/
 
 ## Important Paths
 
-- Main entrypoint: [`src/main/java/com/github/scoliossis/Main.java`](src/main/java/com/github/scoliossis/Main.java)
-- Module system: [`src/main/java/com/github/scoliossis/modules`](src/main/java/com/github/scoliossis/modules)
-- Commands: [`src/main/java/com/github/scoliossis/commands`](src/main/java/com/github/scoliossis/commands)
-- Mixins: [`src/main/java/com/github/scoliossis/mixins`](src/main/java/com/github/scoliossis/mixins)
+- Main entrypoint: [`src/main/java/com/github/cooldood/Main.java`](src/main/java/com/github/cooldood/Main.java)
+- Module system: [`src/main/java/com/github/cooldood/modules`](src/main/java/com/github/cooldood/modules)
+- Commands: [`src/main/java/com/github/cooldood/commands`](src/main/java/com/github/cooldood/commands)
+- Mixins: [`src/main/java/com/github/cooldood/mixins`](src/main/java/com/github/cooldood/mixins)
 
 ## Known Jar Name
 
@@ -59,10 +59,10 @@ Use this prompt if you want another AI to help build or modify the client:
 > - If a change touches gameplay logic, verify it by building the jar and fixing compile errors before finishing.
 >
 > Useful project entrypoints:
-> - `src/main/java/com/github/scoliossis/Main.java`
-> - `src/main/java/com/github/scoliossis/modules`
-> - `src/main/java/com/github/scoliossis/commands`
-> - `src/main/java/com/github/scoliossis/mixins`
+> - `src/main/java/com/github/cooldood/Main.java`
+> - `src/main/java/com/github/cooldood/modules`
+> - `src/main/java/com/github/cooldood/commands`
+> - `src/main/java/com/github/cooldood/mixins`
 >
 > Build target:
 > - Produce a clean jar for Minecraft Forge 1.8.9.
