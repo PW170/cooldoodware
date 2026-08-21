@@ -3,10 +3,12 @@ package com.github.scoliossis.utils.render.draggable;
 import com.github.scoliossis.Main;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.RenderTickEvent;
+import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.ScreenUtil;
 import com.github.scoliossis.utils.minecraft.ChatUtil;
 import com.github.scoliossis.utils.render.RenderUtil;
+import com.github.scoliossis.utils.tenacity.render.blur.KawaseBloom;
 import com.google.gson.JsonSyntaxException;
 import net.minecraft.client.gui.GuiChat;
 import org.apache.commons.io.FileUtils;
@@ -30,8 +32,37 @@ public class DraggableRenderer {
     private final static String draggablesPath = Main.extraSavedFeaturesPath;
     private final static String draggablesFile = "draggables" + Main.configExtension;
 
+    public static boolean isBloom = false;
+
     @SubscribeEvent
     public static void drawDraggables(RenderTickEvent event) {
+        
+        // PostProcessing Pass
+        isBloom = true;
+        KawaseBloom.framebuffer = com.github.scoliossis.utils.render.RenderUtil.createFrameBuffer(KawaseBloom.framebuffer, true);
+        KawaseBloom.framebuffer.framebufferClear();
+        KawaseBloom.framebuffer.bindFramebuffer(false);
+
+        for (Draggable draggable : draggables) {
+            if (!shouldRender(draggable)) continue;
+            try {
+                int renderX = (int) (draggable.x * C.res().getScaledWidth());
+                int renderY = (int) (draggable.y * C.res().getScaledHeight());
+                if (draggable.anchor == Draggable.Anchor.RIGHT) renderX -= draggable.width;
+                GL11.glPushMatrix();
+                GL11.glTranslated(renderX, renderY, 0);
+                draggable.render.call();
+                GL11.glPopMatrix();
+            } catch (Exception e) {}
+        }
+        
+        KawaseBloom.framebuffer.unbindFramebuffer();
+        KawaseBloom.renderBlur(KawaseBloom.framebuffer.framebufferTexture, 4, 3);
+        C.mc.getFramebuffer().bindFramebuffer(false);
+        isBloom = false;
+
+
+        // Normal Pass
         for (Draggable draggable : draggables) {
             if (!shouldRender(draggable)) continue;
 

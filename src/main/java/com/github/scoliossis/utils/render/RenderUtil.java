@@ -25,6 +25,26 @@ import java.awt.*;
 import java.nio.FloatBuffer;
 
 public class RenderUtil {
+    public static net.minecraft.client.shader.Framebuffer createFrameBuffer(net.minecraft.client.shader.Framebuffer framebuffer) {
+        return createFrameBuffer(framebuffer, false);
+    }
+    public static net.minecraft.client.shader.Framebuffer createFrameBuffer(net.minecraft.client.shader.Framebuffer framebuffer, boolean depth) {
+        if (framebuffer == null || framebuffer.framebufferWidth != net.minecraft.client.Minecraft.getMinecraft().displayWidth || framebuffer.framebufferHeight != net.minecraft.client.Minecraft.getMinecraft().displayHeight) {
+            if (framebuffer != null) {
+                framebuffer.deleteFramebuffer();
+            }
+            return new net.minecraft.client.shader.Framebuffer(net.minecraft.client.Minecraft.getMinecraft().displayWidth, net.minecraft.client.Minecraft.getMinecraft().displayHeight, depth);
+        }
+        return framebuffer;
+    }
+    public static void bindTexture(int texture) {
+        org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, texture);
+    }
+    public static void setAlphaLimit(float limit) {
+        net.minecraft.client.renderer.GlStateManager.enableAlpha();
+        net.minecraft.client.renderer.GlStateManager.alphaFunc(org.lwjgl.opengl.GL11.GL_GREATER, (float) (limit * .01));
+    }
+
     public static RenderSide renderSide = RenderSide.Tick;
 
     public static int ticks = 0;
