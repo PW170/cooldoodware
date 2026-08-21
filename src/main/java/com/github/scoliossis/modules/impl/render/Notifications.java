@@ -7,6 +7,7 @@ import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.utils.render.notifications.NotificationManager;
 import com.github.scoliossis.utils.render.notifications.NotificationType;
+import com.github.scoliossis.modules.RegisterSubModule;
 
 @RegisterModule(
         name = "Notifications",
@@ -14,6 +15,8 @@ import com.github.scoliossis.utils.render.notifications.NotificationType;
         category = Category.RENDER
 )
 public class Notifications extends Module {
+    @RegisterSubModule(name = "Size", min = 0.5, max = 2.0, increment = 0.1)
+    public static double size = 1.0;
 
     @SubscribeEvent
     public static void onRender2D(RenderTickEvent event) {

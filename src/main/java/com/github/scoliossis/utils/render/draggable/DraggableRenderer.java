@@ -38,28 +38,30 @@ public class DraggableRenderer {
     public static void drawDraggables(RenderTickEvent event) {
         
         // PostProcessing Pass
-        isBloom = true;
-        KawaseBloom.framebuffer = com.github.scoliossis.utils.render.RenderUtil.createFrameBuffer(KawaseBloom.framebuffer, true);
-        KawaseBloom.framebuffer.framebufferClear();
-        KawaseBloom.framebuffer.bindFramebuffer(false);
+        if (ModuleManager.isEnabled(com.github.scoliossis.modules.impl.client.PostProcessing.class)) {
+            isBloom = true;
+            KawaseBloom.framebuffer = com.github.scoliossis.utils.render.RenderUtil.createFrameBuffer(KawaseBloom.framebuffer, true);
+            KawaseBloom.framebuffer.framebufferClear();
+            KawaseBloom.framebuffer.bindFramebuffer(false);
 
-        for (Draggable draggable : draggables) {
-            if (!shouldRender(draggable)) continue;
-            try {
-                int renderX = (int) (draggable.x * C.res().getScaledWidth());
-                int renderY = (int) (draggable.y * C.res().getScaledHeight());
-                if (draggable.anchor == Draggable.Anchor.RIGHT) renderX -= draggable.width;
-                GL11.glPushMatrix();
-                GL11.glTranslated(renderX, renderY, 0);
-                draggable.render.call();
-                GL11.glPopMatrix();
-            } catch (Exception e) {}
+            for (Draggable draggable : draggables) {
+                if (!shouldRender(draggable)) continue;
+                try {
+                    int renderX = (int) (draggable.x * C.res().getScaledWidth());
+                    int renderY = (int) (draggable.y * C.res().getScaledHeight());
+                    if (draggable.anchor == Draggable.Anchor.RIGHT) renderX -= draggable.width;
+                    GL11.glPushMatrix();
+                    GL11.glTranslated(renderX, renderY, 0);
+                    draggable.render.call();
+                    GL11.glPopMatrix();
+                } catch (Exception e) {}
+            }
+            
+            KawaseBloom.framebuffer.unbindFramebuffer();
+            KawaseBloom.renderBlur(KawaseBloom.framebuffer.framebufferTexture, 4, 3);
+            C.mc.getFramebuffer().bindFramebuffer(false);
+            isBloom = false;
         }
-        
-        KawaseBloom.framebuffer.unbindFramebuffer();
-        KawaseBloom.renderBlur(KawaseBloom.framebuffer.framebufferTexture, 4, 3);
-        C.mc.getFramebuffer().bindFramebuffer(false);
-        isBloom = false;
 
 
         // Normal Pass

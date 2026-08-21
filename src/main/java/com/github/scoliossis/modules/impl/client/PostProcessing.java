@@ -5,6 +5,7 @@ import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 
 @RegisterModule(
+        enabledByDefault = true,
         name = "PostProcessing",
         description = "Adds blur and bloom effects.",
         category = Category.CLIENT

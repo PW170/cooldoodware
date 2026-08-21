@@ -10,7 +10,14 @@ import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBow;
+import net.minecraft.item.ItemSnowball;
+import net.minecraft.item.ItemEgg;
+import net.minecraft.item.ItemEnderPearl;
+import net.minecraft.item.ItemPotion;
+import net.minecraft.item.ItemExpBottle;
+import net.minecraft.item.ItemFishingRod;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -35,20 +42,53 @@ public class Trajectories extends Module {
         if (player == null || player.getCurrentEquippedItem() == null) return;
         
         ItemStack stack = player.getCurrentEquippedItem();
-        if (!(stack.getItem() instanceof ItemBow)) return;
+        Item item = stack.getItem();
         
-        int useCount = player.getItemInUseCount();
-        if (useCount == 0) return; // Only show when drawing
+        float gravity = 0.0f;
+        float drag = 0.99f;
+        float velocity = 0.0f;
+        Color color = Color.WHITE;
+        
+        if (item instanceof ItemBow) {
+            int useCount = player.getItemInUseCount();
+            if (useCount == 0) return; // Only show when drawing
+            
+            int maxDuration = stack.getMaxItemUseDuration();
+            int ticksInUse = maxDuration - useCount;
+            float power = (float) ticksInUse / 20.0f;
+            power = (power * power + power * 2.0f) / 3.0f;
+            if (power > 1.0f) power = 1.0f;
+            if (power < 0.1f) return;
+            
+            velocity = power * 3.0f;
+            gravity = 0.05f;
+            color = new Color(255, 255, 255, 200);
+        } else if (item instanceof ItemSnowball || item instanceof ItemEgg) {
+            gravity = 0.03f;
+            velocity = 1.5f;
+            color = new Color(180, 220, 255, 200);
+        } else if (item instanceof ItemEnderPearl) {
+            gravity = 0.03f;
+            velocity = 1.5f;
+            color = new Color(150, 80, 255, 200);
+        } else if (item instanceof ItemPotion) {
+            if (!ItemPotion.isSplash(stack.getMetadata())) return;
+            gravity = 0.05f;
+            velocity = 0.5f;
+            color = new Color(100, 255, 150, 200);
+        } else if (item instanceof ItemExpBottle) {
+            gravity = 0.07f;
+            velocity = 0.7f;
+            color = new Color(255, 220, 80, 200);
+        } else if (item instanceof ItemFishingRod) {
+            gravity = 0.04f;
+            drag = 0.992f;
+            velocity = 0.4f;
+            color = new Color(200, 160, 100, 200);
+        } else {
+            return;
+        }
 
-        int maxDuration = stack.getMaxItemUseDuration();
-        int ticksInUse = maxDuration - useCount;
-        float power = (float) ticksInUse / 20.0f;
-        power = (power * power + power * 2.0f) / 3.0f;
-        if (power > 1.0f) power = 1.0f;
-        if (power < 0.1f) return;
-        
-        float velocity = power * 3.0f;
-        
         double renderPosX = C.mc.getRenderManager().viewerPosX;
         double renderPosY = C.mc.getRenderManager().viewerPosY;
         double renderPosZ = C.mc.getRenderManager().viewerPosZ;
@@ -64,9 +104,10 @@ public class Trajectories extends Module {
         double motionZ = (double)(Math.cos(yaw / 180.0F * (float)Math.PI) * Math.cos(pitch / 180.0F * (float)Math.PI)) * velocity;
         double motionY = (double)(-Math.sin(pitch / 180.0F * (float)Math.PI)) * velocity;
         
-        float gravity = 0.05f;
-        float drag = 0.99f;
-        
+        drawTrajectory(posX, posY, posZ, motionX, motionY, motionZ, gravity, drag, color, renderPosX, renderPosY, renderPosZ);
+    }
+
+    private static void drawTrajectory(double posX, double posY, double posZ, double motionX, double motionY, double motionZ, float gravity, float drag, Color color, double renderPosX, double renderPosY, double renderPosZ) {
         boolean hasCollided = false;
         MovingObjectPosition hitPos = null;
         
@@ -78,7 +119,7 @@ public class Trajectories extends Module {
         GL11.glDepthMask(false);
         GL11.glLineWidth(2.0f);
         
-        RenderUtil.glColor(new Color(255, 255, 255, 200));
+        RenderUtil.glColor(color);
         GL11.glBegin(GL11.GL_LINE_STRIP);
         
         for (int i = 0; i < 300; i++) {

@@ -1,6 +1,7 @@
 package com.github.scoliossis.utils.render.notifications;
 
 import com.github.scoliossis.modules.impl.client.ThemeModule;
+import com.github.scoliossis.modules.impl.render.Notifications;
 import com.github.scoliossis.utils.render.FontUtil;
 import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.client.Minecraft;
@@ -43,11 +44,15 @@ public class NotificationManager {
         while (iterator.hasNext()) {
             Notification notif = iterator.next();
 
-            float notifHeight = PAD * 2 + FontUtil.getFontHeight(TITLE_SIZE) + FontUtil.getFontHeight(DESC_SIZE) + 4;
+            float effectivePad = PAD * (float)Notifications.size;
+            int effectiveTitleSize = (int)(TITLE_SIZE * Notifications.size);
+            int effectiveDescSize = (int)(DESC_SIZE * Notifications.size);
+            float effectiveWidth = NOTIF_WIDTH * (float)Notifications.size;
+            float notifHeight = effectivePad * 2 + FontUtil.getFontHeight(effectiveTitleSize) + FontUtil.getFontHeight(effectiveDescSize) + 4;
             
             yOffset -= notifHeight + 10; // 10 is spacing between notifications
 
-            float targetX = screenWidth - NOTIF_WIDTH - 10;
+            float targetX = screenWidth - effectiveWidth - 10;
             float targetY = yOffset;
 
             if (notif.isExpired()) {
@@ -70,11 +75,11 @@ public class NotificationManager {
 
             notif.animate(targetX, targetY);
 
-            drawClayNotification(notif.getX(), notif.getY(), NOTIF_WIDTH, notifHeight, notif);
+            drawClayNotification(notif.getX(), notif.getY(), effectiveWidth, notifHeight, effectivePad, effectiveTitleSize, effectiveDescSize, notif);
         }
     }
 
-    private static void drawClayNotification(float x, float y, float w, float h, Notification notif) {
+    private static void drawClayNotification(float x, float y, float w, float h, float effectivePad, int effectiveTitleSize, int effectiveDescSize, Notification notif) {
         GL11.glPushMatrix();
 
         // 1. Drop shadow
@@ -102,10 +107,10 @@ public class NotificationManager {
         }
 
         // 6. Text
-        float cursorY = y + PAD;
-        FontUtil.drawString(notif.getTitle(), x + PAD, cursorY, TITLE_SIZE, accent, false);
-        cursorY += FontUtil.getFontHeight(TITLE_SIZE) + 4;
-        FontUtil.drawString(notif.getDescription(), x + PAD, cursorY, DESC_SIZE, TEXT_MUTED, false);
+        float cursorY = y + effectivePad;
+        FontUtil.drawString(notif.getTitle(), x + effectivePad, cursorY, effectiveTitleSize, accent, false);
+        cursorY += FontUtil.getFontHeight(effectiveTitleSize) + 4;
+        FontUtil.drawString(notif.getDescription(), x + effectivePad, cursorY, effectiveDescSize, TEXT_MUTED, false);
 
         GL11.glPopMatrix();
     }
