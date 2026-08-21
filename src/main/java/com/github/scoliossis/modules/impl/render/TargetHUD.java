@@ -25,6 +25,7 @@ import java.awt.*;
         category = Category.RENDER
 )
 public class TargetHUD extends Module {
+    public static final com.github.scoliossis.utils.tenacity.animations.ContinualAnimation healthAnimation = new com.github.scoliossis.utils.tenacity.animations.ContinualAnimation();
     @RegisterSubModule(name = "Mode")
     public static HUDMode hudMode = HUDMode.Tenacity;
 

@@ -83,20 +83,13 @@ public class Statistics extends Module {
     }
 
     private static void drawClayPanel(float x, float y, float w, float h, float radius, Color bg) {
-        // Drop shadow for puffy clay look
-        RenderUtil.drawRoundedRect(x + 2, y + 2, w, h, radius, CLAY_SHADOW);
-        // Main clay body
-        RenderUtil.drawRoundedRect(x, y, w, h, radius, bg);
-        // Top rim highlight
-        RenderUtil.drawRoundedRect(x + 1, y + 1, w - 2, 2, radius, CLAY_HIGHLIGHT);
+        com.github.scoliossis.utils.tenacity.render.RoundedUtil.drawRound(x, y, w, h, radius, bg);
     }
 
     // Outer panel with theme accent strip — matches ClickGUI category header style
     private static void drawClayPanelWithAccent(float x, float y, float w, float h, float radius, Color bg) {
-        drawClayPanel(x, y, w, h, radius, bg);
-        Color ac = accent();
-        Color accentStrip = new Color(ac.getRed(), ac.getGreen(), ac.getBlue(), 140);
-        RenderUtil.drawRoundedRect(x, y, w, 2, radius, accentStrip);
+        Color[] theme = com.github.scoliossis.modules.impl.client.ThemeModule.getThemeColours();
+        com.github.scoliossis.utils.tenacity.render.RoundedUtil.drawGradientRound(x, y, w, h, radius, theme[0], theme.length > 3 ? theme[3] : theme[0], theme.length > 1 ? theme[1] : theme[0], theme.length > 2 ? theme[2] : theme[0]);
     }
 
     private static double[] renderStatistics() {
