@@ -27,8 +27,10 @@ public class ArrayListModule extends Module {
 
     private static final HashMap<Module, DecelerateAnimation> moduleAnimations = new HashMap<>();
 
+    
+
     public static Draggable arraylistDraggable = new Draggable(
-            "ArrayList",
+            "ArrayListWidget",
             () -> {
                 int size = (int) fontSize;
 
@@ -79,4 +81,5 @@ public class ArrayListModule extends Module {
     protected void onEnable() {}
     @Override
     protected void onDisable() {}
+    static { arraylistDraggable.x = 0.85; arraylistDraggable.y = 0.05; }
 }
