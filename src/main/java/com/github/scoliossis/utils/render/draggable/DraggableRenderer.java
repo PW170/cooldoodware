@@ -38,11 +38,17 @@ public class DraggableRenderer {
             try {
                 int renderX = (int) (draggable.x * C.res().getScaledWidth());
                 int renderY = (int) (draggable.y * C.res().getScaledHeight());
+                
+                if (draggable.anchor == Draggable.Anchor.RIGHT) {
+                    renderX -= draggable.width;
+                }
 
                 GL11.glPushMatrix();
                 GL11.glTranslated(renderX, renderY, 0);
                 double[] size = draggable.render.call();
                 GL11.glPopMatrix();
+                draggable.width = size[0];
+                draggable.height = size[1];
 
                 if (canDrag()) {
                     boolean isHovered = ScreenUtil.getMouseX() >= renderX && ScreenUtil.getMouseX() <= renderX + size[0] 
@@ -56,7 +62,10 @@ public class DraggableRenderer {
                         RenderUtil.drawRectOutline(0, 0, size[0], size[1], 1, Color.WHITE);
                         GL11.glPopMatrix();
 
-                        draggable.x = (ScreenUtil.getMouseX() - draggingCoords.width) / C.res().getScaledWidth();
+                        double newX = ScreenUtil.getMouseX() - draggingCoords.width;
+                        if (draggable.anchor == Draggable.Anchor.RIGHT) newX += size[0];
+                        draggable.x = newX / C.res().getScaledWidth();
+                        
                         draggable.y = (ScreenUtil.getMouseY() - draggingCoords.height) / C.res().getScaledHeight();
                     }
 

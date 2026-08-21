@@ -26,11 +26,12 @@ public class ArrayListModule extends Module {
     public static double fontSize = 20;
 
     private static final HashMap<Module, DecelerateAnimation> moduleAnimations = new HashMap<>();
+    private static float animatedMaxWidth = 0;
 
     
 
     public static Draggable arraylistDraggable = new Draggable(
-            "ArrayListWidget",
+            "ArrayListWidget2",
             () -> {
                 int size = (int) fontSize;
 
@@ -38,24 +39,37 @@ public class ArrayListModule extends Module {
                 activeModules.sort(Comparator.comparingDouble(m -> -FontUtil.getStringWidth(m.getAnnotation().name() + (!m.arrayListExtraInfo().isEmpty() ? " " + m.arrayListExtraInfo() : ""), size)));
 
                 float y = 0;
-                float maxWidth = 0;
+                float targetMaxWidth = 0;
+
+                for (Module m : activeModules) {
+                    DecelerateAnimation anim = moduleAnimations.computeIfAbsent(m, k -> new DecelerateAnimation(250, 1));
+                    anim.setDirection(m.isEnabled() && !m.hide ? Direction.FORWARDS : Direction.BACKWARDS);
+                    float scale = (float) anim.getOutput().floatValue();
+                    if (scale > 0.01f) {
+                        String text = m.getAnnotation().name() + (!m.arrayListExtraInfo().isEmpty() ? " \u00a77" + m.arrayListExtraInfo() : "");
+                        float width = FontUtil.getStringWidth(text, size);
+                        if (width > targetMaxWidth) targetMaxWidth = width;
+                    }
+                }
+                
+                float diff = targetMaxWidth - animatedMaxWidth;
+                animatedMaxWidth += diff * 0.1f;
+                if (Math.abs(diff) < 0.1f) animatedMaxWidth = targetMaxWidth;
+                
+                float maxWidth = animatedMaxWidth;
 
                 Color[] theme = ThemeModule.getThemeColours();
 
                 int index = 0;
                 for (Module m : activeModules) {
-                    DecelerateAnimation anim = moduleAnimations.computeIfAbsent(m, k -> new DecelerateAnimation(250, 1));
-                    anim.setDirection(m.isEnabled() && !m.hide ? Direction.FORWARDS : Direction.BACKWARDS);
-                    
+                    DecelerateAnimation anim = moduleAnimations.get(m);
                     float scale = (float) anim.getOutput().floatValue();
                     if (scale <= 0.01f) continue;
 
-                    String text = m.getAnnotation().name() + (!m.arrayListExtraInfo().isEmpty() ? " §7" + m.arrayListExtraInfo() : "");
+                    String text = m.getAnnotation().name() + (!m.arrayListExtraInfo().isEmpty() ? " \u00a77" + m.arrayListExtraInfo() : "");
                     float width = FontUtil.getStringWidth(text, size);
                     float height = FontUtil.getFontHeight(size) + 4;
                     
-                    if (width > maxWidth) maxWidth = width;
-
                     float x = maxWidth - (width * scale);
 
                     // Tenacity style background
@@ -81,5 +95,5 @@ public class ArrayListModule extends Module {
     protected void onEnable() {}
     @Override
     protected void onDisable() {}
-    static { arraylistDraggable.x = 0.85; arraylistDraggable.y = 0.05; }
+    static { arraylistDraggable.anchor = Draggable.Anchor.RIGHT; arraylistDraggable.x = 0.99; arraylistDraggable.y = 0.05; }
 }

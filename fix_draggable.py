@@ -1,4 +1,6 @@
-package com.github.scoliossis.utils.render.draggable;
+import codecs
+
+new_code = '''package com.github.scoliossis.utils.render.draggable;
 
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
@@ -27,3 +29,8 @@ public class Draggable {
         DraggableRenderer.draggables.add(this);
     }
 }
+'''
+
+with codecs.open('src/main/java/com/github/scoliossis/utils/render/draggable/Draggable.java', 'w', 'utf-8') as f:
+    f.write(new_code)
+print("done")
