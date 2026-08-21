@@ -28,20 +28,10 @@ public class ModuleRenderer {
 
         float totalHeight = h;
 
-        boolean isHovered = ScreenUtil.isMouseOver(module.getAnnotation().category().renderX + x, module.getAnnotation().category().renderY + ClickGUIScreen.categoryRenderer.CATEGORY_HEIGHT + module.getAnnotation().category().renderScroll + y, w, h, mouseX, mouseY);
+        boolean isHovered = ScreenUtil.isMouseOver(module.getAnnotation().category().renderX + x, module.getAnnotation().category().renderY + ClickGUIScreen.categoryRenderer.CATEGORY_HEIGHT + 5 + module.getAnnotation().category().renderScroll + y, w, h, mouseX, mouseY);
 
         if (isHovered) {
             ClickGUIScreen.moduleHovered = module;
-            if (ClickGUIScreen.mouseButton == 0) {
-                module.toggle();
-                ClickGUIScreen.mouseButton = -1;
-            } else if (ClickGUIScreen.mouseButton == 1) {
-                module.setOpen(!module.isOpen());
-                ClickGUIScreen.mouseButton = -1;
-            } else if (ClickGUIScreen.mouseButton == 2) {
-                KeybindHandler.listeningModule = module;
-                ClickGUIScreen.mouseButton = -1;
-            }
         }
 
         String name = moduleName(module);
@@ -77,7 +67,7 @@ public class ModuleRenderer {
                 
                 float subY = currentY + totalHeight;
                 
-                boolean subHovered = ScreenUtil.isMouseOver(module.getAnnotation().category().renderX + x, module.getAnnotation().category().renderY + ClickGUIScreen.categoryRenderer.CATEGORY_HEIGHT + module.getAnnotation().category().renderScroll + subY, w, subH, mouseX, mouseY);
+                boolean subHovered = ScreenUtil.isMouseOver(module.getAnnotation().category().renderX + x, module.getAnnotation().category().renderY + ClickGUIScreen.categoryRenderer.CATEGORY_HEIGHT + 5 + module.getAnnotation().category().renderScroll + subY, w, subH, mouseX, mouseY);
                 if (subHovered) {
                     ClickGUIScreen.subModuleHovered = subModule;
                 }
@@ -88,10 +78,6 @@ public class ModuleRenderer {
                 if (type == boolean.class || type == Boolean.class) {
                     FontUtil.drawString(subName, x + 16, subTextY, 9, new Color(200, 200, 200), false);
                     boolean val = (Boolean) subModule.get();
-                    if (subHovered && ClickGUIScreen.mouseButton == 0) {
-                        subModule.set(!val);
-                        ClickGUIScreen.mouseButton = -1;
-                    }
                     Color checkColor = val ? ClickGUIScreen.COL_BLUE : new Color(20, 20, 20);
                     // Small circular toggle on right (using rounded rect)
                     RenderUtil.drawRoundedRect(x + w - 30, subY + subH/2f - 6, 12, 12, 6, checkColor);
@@ -99,20 +85,9 @@ public class ModuleRenderer {
                 } else if (type.isEnum()) {
                     FontUtil.drawString(subName, x + 16, subTextY, 9, new Color(200, 200, 200), false);
                     String val = subModule.get().toString();
-                    if (subHovered && ClickGUIScreen.mouseButton == 0) {
-                        Enum<?> current = (Enum<?>) subModule.get();
-                        Enum<?>[] constants = current.getClass().getEnumConstants();
-                        int next = (current.ordinal() + 1) % constants.length;
-                        subModule.set(constants[next]);
-                        ClickGUIScreen.mouseButton = -1;
-                    }
                     FontUtil.drawString(val + " >", x + w - FontUtil.getStringWidth(val + " >", 9) - 16, subTextY, 9, Color.WHITE, false);
                 } else if (type == SubCategory.class) {
                     SubCategory cat = (SubCategory) subModule.get();
-                    if (subHovered && ClickGUIScreen.mouseButton == 0) {
-                        cat.open = !cat.open;
-                        ClickGUIScreen.mouseButton = -1;
-                    }
                     // Centered section divider
                     float textW = FontUtil.getStringWidth(subName, 9);
                     float centerX = x + w / 2f;

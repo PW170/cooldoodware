@@ -30,8 +30,8 @@ import java.util.List;
 
 public class ClickGUIScreen extends GuiScreen {
     public static final int fontSize = 10;
-    // User requested ~200px width
-    public static int GUI_TAB_WIDTH = 200;
+    // User requested ~200px width, decreased to 175
+    public static int GUI_TAB_WIDTH = 175;
 
     public static final int BASE_X = 0; // we apply renderX via translation
     public static final int BASE_Y = 0;
@@ -82,7 +82,8 @@ public class ClickGUIScreen extends GuiScreen {
         GL11.glPushMatrix();
 
         List<Module> modules = ModuleManager.getModules();
-        if (!modules.contains(moduleHovered)) moduleHovered = null;
+        moduleHovered = null;
+        subModuleHovered = null;
 
         for (Category category : Category.values()) {
             GL11.glPushMatrix();
@@ -185,6 +186,33 @@ public class ClickGUIScreen extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         ClickGUIScreen.mouseButton = mouseButton;
         if (mouseButton == 0) leftMouseDown = true;
+        
+        if (subModuleHovered != null) {
+            Class<?> type = subModuleHovered.getField().getType();
+            if (type == boolean.class || type == Boolean.class) {
+                if (mouseButton == 0) subModuleHovered.set(!(Boolean) subModuleHovered.get());
+            } else if (type.isEnum()) {
+                if (mouseButton == 0) {
+                    Enum<?> current = (Enum<?>) subModuleHovered.get();
+                    Enum<?>[] constants = current.getClass().getEnumConstants();
+                    int next = (current.ordinal() + 1) % constants.length;
+                    subModuleHovered.set(constants[next]);
+                }
+            } else if (type == com.github.cooldood.modules.SubCategory.class) {
+                if (mouseButton == 0) {
+                    com.github.cooldood.modules.SubCategory cat = (com.github.cooldood.modules.SubCategory) subModuleHovered.get();
+                    cat.open = !cat.open;
+                }
+            }
+        } else if (moduleHovered != null) {
+            if (mouseButton == 0) {
+                moduleHovered.toggle();
+            } else if (mouseButton == 1) {
+                moduleHovered.setOpen(!moduleHovered.isOpen());
+            } else if (mouseButton == 2) {
+                com.github.cooldood.utils.client.KeybindHandler.listeningModule = moduleHovered;
+            }
+        }
     }
 
     @Override
