@@ -30,7 +30,6 @@ public class DraggableRenderer {
     private final static String draggablesPath = Main.extraSavedFeaturesPath;
     private final static String draggablesFile = "draggables" + Main.configExtension;
 
-    // more gibberish code i hate everything
     @SubscribeEvent
     public static void drawDraggables(RenderTickEvent event) {
         for (Draggable draggable : draggables) {
@@ -43,21 +42,27 @@ public class DraggableRenderer {
                 GL11.glPushMatrix();
                 GL11.glTranslated(renderX, renderY, 0);
                 double[] size = draggable.render.call();
+                GL11.glPopMatrix();
 
                 if (canDrag()) {
+                    boolean isHovered = ScreenUtil.getMouseX() >= renderX && ScreenUtil.getMouseX() <= renderX + size[0] 
+                                     && ScreenUtil.getMouseY() >= renderY && ScreenUtil.getMouseY() <= renderY + size[1];
+
                     draggingCoords = dragging == null ? new Rectangle((int) ScreenUtil.getMouseX() - renderX, (int) ScreenUtil.getMouseY() - renderY) : draggingCoords;
 
                     if (dragging == draggable) {
+                        GL11.glPushMatrix();
+                        GL11.glTranslated(renderX, renderY, 0);
                         RenderUtil.drawRectOutline(0, 0, size[0], size[1], 1, Color.WHITE);
+                        GL11.glPopMatrix();
 
                         draggable.x = (ScreenUtil.getMouseX() - draggingCoords.width) / C.res().getScaledWidth();
                         draggable.y = (ScreenUtil.getMouseY() - draggingCoords.height) / C.res().getScaledHeight();
                     }
 
-                    dragging = Mouse.isButtonDown(0) ? dragging == null && ScreenUtil.isMouseOver(0, 0, size[0], size[1], ScreenUtil.getMouseX(), ScreenUtil.getMouseY()) ? draggable : dragging : null;
+                    dragging = Mouse.isButtonDown(0) ? dragging == null && isHovered ? draggable : dragging : null;
                 }
 
-                GL11.glPopMatrix();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
