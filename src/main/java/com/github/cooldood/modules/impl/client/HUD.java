@@ -59,9 +59,9 @@ public class HUD extends Module {
                   
 
                   GradientUtil.applyGradientHorizontal(0, 0, width, height, 1, color1, color2, () -> {
-                      FontUtil.drawString(CLIENT_NAME, 0, 0, size, Color.WHITE, true);
+                      FontUtil.drawString(CLIENT_NAME, 0, 0, size, Color.WHITE, !com.github.cooldood.utils.render.draggable.DraggableRenderer.isBloom);
                   });
-                FontUtil.drawString(extraText, width, height / 2f - FontUtil.getFontHeight(extraSize) / 2f, extraSize, Color.WHITE, true);
+                FontUtil.drawString(extraText, width, height / 2f - FontUtil.getFontHeight(extraSize) / 2f, extraSize, Color.WHITE, !com.github.cooldood.utils.render.draggable.DraggableRenderer.isBloom);
 
                 return new double[]{width + FontUtil.getStringWidth(extraText, extraSize), height};
             },

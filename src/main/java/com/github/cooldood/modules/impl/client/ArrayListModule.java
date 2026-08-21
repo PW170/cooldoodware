@@ -52,9 +52,11 @@ public class ArrayListModule extends Module {
                     }
                 }
                 
-                float diff = targetMaxWidth - animatedMaxWidth;
-                animatedMaxWidth += diff * 0.1f;
-                if (Math.abs(diff) < 0.1f) animatedMaxWidth = targetMaxWidth;
+                if (com.github.cooldood.utils.render.draggable.DraggableRenderer.isBloom || !ModuleManager.isEnabled(com.github.cooldood.modules.impl.client.PostProcessing.class)) {
+                    float diff = targetMaxWidth - animatedMaxWidth;
+                    animatedMaxWidth += diff * 0.1f;
+                    if (Math.abs(diff) < 0.1f) animatedMaxWidth = targetMaxWidth;
+                }
                 
                 float maxWidth = animatedMaxWidth;
 
