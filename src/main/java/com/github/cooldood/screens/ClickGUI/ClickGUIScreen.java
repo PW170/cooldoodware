@@ -57,8 +57,8 @@ public class ClickGUIScreen extends GuiScreen {
         if (Main.extraSavedFeaturesPath == null) return;
         loadCategoryPositions();
         
-        // Setup initial default positions if they are bunched up at 0,0
-        if (Category.values()[0].posX == 0 && Category.values()[1].posX == 0) {
+        // Setup initial default positions if they are bunched up at 0,0 or loaded from old config (negative)
+        if (Category.values()[0].posX <= 0 && Category.values()[1].posX <= 0) {
             float startX = 28;
             for (Category cat : Category.values()) {
                 cat.posX = cat.renderX = startX;
@@ -100,7 +100,7 @@ public class ClickGUIScreen extends GuiScreen {
             categoryRenderer.handleMouse(category, mouseX, mouseY);
             categoryRenderer.render(category);
 
-            RenderUtil.glScissor(category.renderX, category.renderY + categoryRenderer.CATEGORY_HEIGHT,
+            RenderUtil.glScissor(BASE_X, BASE_Y + categoryRenderer.CATEGORY_HEIGHT,
                     GUI_TAB_WIDTH, C.res().getScaledHeight());
 
             category.renderScroll += (category.scroll - category.renderScroll) / fpsMultiplier;
