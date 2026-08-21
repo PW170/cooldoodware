@@ -21,6 +21,25 @@ public class HUD extends Module {
     @RegisterSubModule(name = "Watermark Size", min = 5, max = 50, increment = 2)
     public static double watermarkSize = 30;
 
+    private static long lastPingTime = 0;
+    private static int cachedPing = 0;
+
+    private static int getPing() {
+        if (C.mc.isSingleplayer()) return 0;
+        long now = System.currentTimeMillis();
+        if (now - lastPingTime > 10000) {
+            lastPingTime = now;
+            if (C.mc.getNetHandler() != null && C.p() != null) {
+                net.minecraft.client.network.NetworkPlayerInfo playerInfo = C.mc.getNetHandler().getPlayerInfo(C.p().getUniqueID());
+                if (playerInfo != null) {
+                    cachedPing = playerInfo.getResponseTime();
+                }
+            }
+        }
+        return cachedPing;
+    }
+
+
     public static Draggable coolwareWatermark = new Draggable(
             "CoolWareWatermark",
             () -> {
@@ -38,7 +57,7 @@ public class HUD extends Module {
                 });
                 
                 int extraSize = (int) (size / 2.0);
-                String extraText = " | " + C.mc.getDebugFPS() + "fps";
+                String extraText = " | " + C.mc.getDebugFPS() + "fps | " + getPing() + "ms";
                 FontUtil.drawString(extraText, width, height / 2f - FontUtil.getFontHeight(extraSize) / 2f, extraSize, Color.WHITE, true);
 
                 return new double[]{width + FontUtil.getStringWidth(extraText, extraSize), height};
