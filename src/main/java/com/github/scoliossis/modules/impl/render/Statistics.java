@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 public class Statistics extends Module {
     public static int gamesPlayed, killCount, deathCount, victoryCount;
     public static long startTime = System.currentTimeMillis(), endTime = -1;
+    private static long lastVictoryTime = 0;
     public static final String[] KILL_TRIGGERS = {"by *", "para *", "fue destrozado a manos de *"};
     private static final Pattern WIN_MESSAGE_PATTERN = Pattern.compile(
             "(?i).*\\b(1st place!?|#1!?|victory!?|winner!?|won the game|you won(?: the game)?|team wins!?)\\b.*"
@@ -299,7 +300,10 @@ public class Statistics extends Module {
         // Victory detection should only catch explicit end-of-game messages.
         String lowerMsg = message.toLowerCase();
         if (!message.contains(":") && WIN_MESSAGE_PATTERN.matcher(lowerMsg).matches()) {
-            victoryCount++;
+            if (System.currentTimeMillis() - lastVictoryTime > 5000) {
+                victoryCount++;
+                lastVictoryTime = System.currentTimeMillis();
+            }
         }
         if (messageStr.contains("ClickEvent{action=RUN_COMMAND, value='/play ") || messageStr.contains("Want to play again?")) {
             gamesPlayed++;
