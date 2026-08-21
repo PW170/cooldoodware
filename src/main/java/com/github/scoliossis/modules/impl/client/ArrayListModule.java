@@ -45,7 +45,7 @@ public class ArrayListModule extends Module {
                 int index = 0;
                 for (Module m : activeModules) {
                     DecelerateAnimation anim = moduleAnimations.computeIfAbsent(m, k -> new DecelerateAnimation(250, 1));
-                    anim.setDirection(m.isEnabled() ? Direction.FORWARDS : Direction.BACKWARDS);
+                    anim.setDirection(m.isEnabled() && !m.hide ? Direction.FORWARDS : Direction.BACKWARDS);
                     
                     float scale = (float) anim.getOutput().floatValue();
                     if (scale <= 0.01f) continue;
