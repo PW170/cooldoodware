@@ -123,111 +123,7 @@ public class FontUtil {
 
     public static float drawStringFade(String string, float x, float y, int size, Color[] colour, double fadeSpeed, double fadeSpread, boolean dropShadow) {
         if (string.isEmpty()) return 0;
-        Color[] inputColour = colour;
-
-        float scaleFactor = getScaleFactor();
-        float originalSize = size;
-        int generatedSize = (int) Math.min(size * scaleFactor, 80);
-
-        FontTexture fontTexture = getFontTexture(generatedSize);
-
-        x = Math.round(x); y = Math.round(y);
-        int fontHeight = fontTexture.height;
-
-        RenderUtil.beginRender();
-        GlStateManager.enableTexture2D();
-        GlStateManager.bindTexture(fontTexture.textureID);
-        RenderUtil.beginAddingVertex(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-        GL11.glTranslated(x, y, 0);
-        double downScale = originalSize / (double) generatedSize;
-        GL11.glScaled(downScale, downScale, 1);
-
-        ArrayList<UnrenderedCharacter> unrenderedCharacters = new ArrayList<>();
-
-        boolean randomStyle = false, boldStyle = false, strikethroughStyle = false, underlineStyle = false, italicStyle = false;
-
-        int totalWidth = 0;
-        for (int i = 0; i < string.length(); i++) {
-            char c = string.charAt(i);
-
-            if (c == '§') {
-                if (i + 1 >= string.length()) continue;
-                char colourCode = string.charAt(i + 1);
-                if (COLOUR_CODES.indexOf(colourCode) != -1) {
-                    Color colourCodeColour = new Color(C.mc.fontRendererObj.getColorCode(colourCode));
-                    for (int j = 0; j < colour.length; j++) colour[j] = new Color(colourCodeColour.getRed(), colourCodeColour.getGreen(), colourCodeColour.getBlue(), colour[j].getAlpha());
-                    randomStyle = boldStyle = strikethroughStyle = underlineStyle = italicStyle = false;
-                }
-                else {
-                    switch (colourCode) {
-                        case 'k':
-                            randomStyle = true;
-                            break;
-                        case 'l':
-                            boldStyle = true;
-                            break;
-                        case 'm':
-                            strikethroughStyle = true;
-                            break;
-                        case 'n':
-                            underlineStyle = true;
-                            break;
-                        case 'o':
-                            italicStyle = true;
-                            break;
-
-                        default:
-                            for (int j = 0; j < colour.length; j++) colour[j] = new Color(inputColour[j].getRed(),inputColour[j].getGreen(),inputColour[j].getBlue(),colour[j].getAlpha());
-                            randomStyle = boldStyle = strikethroughStyle = underlineStyle = italicStyle = false;
-                            break;
-                    }
-                }
-
-                i++;
-                continue;
-            }
-
-            if (randomStyle) c = scrambleCharacter(c, size);
-
-            CharacterInfo characterBounds = fontTexture.charBounds.get(c);
-
-            if (characterBounds == null) {
-                int characterWidth = getMinecraftCharWidth(c, size);
-                Color colourFade = RenderUtil.getColorsFade((x + totalWidth)*fadeSpread, colour, fadeSpeed);
-                unrenderedCharacters.add(new UnrenderedCharacter(c, (int) (totalWidth / scaleFactor), colourFade));
-                totalWidth += characterWidth;
-                continue;
-            }
-
-            float u = (float) characterBounds.u;
-            float uw = (float) characterBounds.uw;
-            int characterWidth = characterBounds.width;
-
-            RenderUtil.getColorsFade((x + totalWidth)*fadeSpread, characterWidth*fadeSpread, colour, fadeSpeed, FADE_CACHE);
-
-            if (dropShadow) {
-                SHADOW_COLOURS[0] = CACHED_SHADOWS[FADE_CACHE[0].getAlpha()];
-                SHADOW_COLOURS[1] = CACHED_SHADOWS[FADE_CACHE[1].getAlpha()];
-                drawCharacter(totalWidth + 1, 1, characterWidth, fontHeight, SHADOW_COLOURS, u, uw);
-            }
-            drawCharacter(totalWidth, 0, characterWidth, fontHeight, FADE_CACHE, u, uw);
-            if (boldStyle) drawCharacter(totalWidth + 1, 0, characterWidth, fontHeight, FADE_CACHE, u, uw);
-
-            float filledTextureUW = 1f / fontTexture.width;
-            if (underlineStyle) drawCharacter(totalWidth, fontHeight * 0.8f, characterWidth, 1, FADE_CACHE, 0, filledTextureUW);
-            if (strikethroughStyle) drawCharacter(totalWidth, fontHeight / 2f - 1, characterWidth, 2, FADE_CACHE, 0, filledTextureUW);
-
-            // todo: impl italics, sounds like effort and they dont look good anyway.
-
-            totalWidth += characterWidth;
-        }
-        RenderUtil.finishRender();
-
-        for (UnrenderedCharacter unrenderedCharacter : unrenderedCharacters) {
-            drawMinecraftString(String.valueOf(unrenderedCharacter.character), x + unrenderedCharacter.x, y, size / scaleFactor, unrenderedCharacter.colour, dropShadow);
-        }
-
-        return totalWidth / scaleFactor;
+        return drawMinecraftString(string, x, y, size, colour[0], dropShadow);
     }
 
     private static void drawCharacter(float x, float y, float w, float h, Color[] colours, float u, float uw) {
@@ -258,44 +154,15 @@ public class FontUtil {
     }
 
     public static int getCharWidth(char c, int fontSize) {
-        float scaleFactor = getScaleFactor();
-        float originalSize = fontSize;
-        int generatedSize = (int) Math.min(fontSize * scaleFactor, 80);
-
-        FontTexture fontTexture = getFontTexture(generatedSize);
-        if (fontTexture.charBounds.get(c) == null) return (int) (C.mc.fontRendererObj.getCharWidth(c) * (originalSize / (double) generatedSize));
-        return (int) (fontTexture.charBounds.get(c).width * (originalSize / (double) generatedSize));
+        return getMinecraftCharWidth(c, fontSize);
     }
 
     public static int getStringWidth(String string, int fontSize) {
-        float scaleFactor = getScaleFactor();
-        float originalSize = fontSize;
-        int generatedSize = (int) Math.min(fontSize * scaleFactor, 80);
-
-        int width = 0;
-        FontTexture fontTexture = getFontTexture(generatedSize);
-
-        HashMap<Character, CharacterInfo> charBounds = fontTexture.charBounds;
-
-        for (int i = 0; i < string.length(); i++) {
-            char c = string.charAt(i);
-
-            CharacterInfo characterRect = charBounds.get(c);
-            if (c == '§')  i++;
-            else if (characterRect == null) width += getMinecraftCharWidth(c, generatedSize);
-            else width += characterRect.width;
-        }
-
-        return (int) (width * (originalSize / (double) generatedSize));
+        return getMinecraftStringWidth(string, fontSize);
     }
 
     public static int getFontHeight(int fontSize) {
-        float scaleFactor = getScaleFactor();
-        float originalSize = fontSize;
-        int generatedSize = (int) Math.min(fontSize * scaleFactor, 80);
-
-        FontTexture fontTexture = getFontTexture(generatedSize);
-        return (int) (fontTexture.height * (originalSize / (double) generatedSize));
+        return (int) (C.mc.fontRendererObj.FONT_HEIGHT * 0.1 * fontSize);
     }
 
     private static float getScaleFactor() {
