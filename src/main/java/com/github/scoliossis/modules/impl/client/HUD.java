@@ -15,11 +15,11 @@ import org.lwjgl.opengl.GL11;
 )
 public class HUD extends Module {
 
-    @RegisterSubModule(name = "Client Name")
+    
     public static String CLIENT_NAME = "Coolware";
 
     @RegisterSubModule(name = "Watermark Size", min = 5, max = 50, increment = 2)
-    public static double watermarkSize = 20;
+    public static double watermarkSize = 30;
 
     public static Draggable coolwareWatermark = new Draggable(
             "CoolWareWatermark",

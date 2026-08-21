@@ -23,7 +23,7 @@ import java.util.List;
 public class ArrayListModule extends Module {
 
     @RegisterSubModule(name = "Font Size", min = 5, max = 30, increment = 2)
-    public static double fontSize = 12;
+    public static double fontSize = 20;
 
     private static final HashMap<Module, DecelerateAnimation> moduleAnimations = new HashMap<>();
 
