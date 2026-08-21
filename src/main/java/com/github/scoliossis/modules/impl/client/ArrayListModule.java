@@ -79,7 +79,7 @@ public class ArrayListModule extends Module {
                     
                     // Double strike to make it bold
                     FontUtil.drawString(text, x + 0.5f, y + 1, size, c1, true);
-                    FontUtil.drawString(text, x, y + 1, size, c1, true);
+                    FontUtil.drawString(text, x, y + 1, size, c1, false);
 
                     y += height * scale;
                     index++;
