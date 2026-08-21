@@ -99,7 +99,7 @@ public class Velocity extends Module {
         if (!(event.packet instanceof S12PacketEntityVelocity)) return;
 
         S12PacketEntityVelocity packet = ((S12PacketEntityVelocity) event.packet);
-        if (packet.getEntityID() != C.p().getEntityId()) return;
+        if (C.p() == null || packet.getEntityID() != C.p().getEntityId()) return;
 
         if (!isDamage && event.packet instanceof S12PacketEntityVelocity) {
             isDamage = true;
