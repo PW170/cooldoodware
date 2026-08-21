@@ -73,7 +73,12 @@ public class ArrayListModule extends Module {
                     float x = maxWidth - (width * scale);
 
                     // Tenacity style background
-                    RenderUtil.drawRect(x - 2, y, width + 4, height, new Color(0, 0, 0, 120));
+                      // Simulated Glow
+                      Color c2 = ColorUtil.interpolateColorsBackAndForth(15, index * 20, theme[0], theme[theme.length > 1 ? 1 : 0], false);
+                      for (int i = 5; i > 0; i--) {
+                          com.github.scoliossis.utils.tenacity.render.RoundedUtil.drawRound(x - 2 - i, y - i, width + 4 + (i*2), height + (i*2), 3, new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), 12));
+                      }
+                      RenderUtil.drawRect(x - 2, y, width + 4, height, new Color(0, 0, 0, 120));
                     
                     Color c1 = ColorUtil.interpolateColorsBackAndForth(15, index * 20, theme[0], theme[theme.length > 1 ? 1 : 0], false);
                     

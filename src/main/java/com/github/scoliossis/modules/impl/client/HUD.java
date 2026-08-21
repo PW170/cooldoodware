@@ -5,6 +5,7 @@ import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.render.FontUtil;
 import com.github.scoliossis.utils.render.draggable.Draggable;
 import com.github.scoliossis.utils.tenacity.render.GradientUtil;
+import com.github.scoliossis.utils.tenacity.render.ColorUtil;
 import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
@@ -52,12 +53,18 @@ public class HUD extends Module {
                 float width = FontUtil.getStringWidth(CLIENT_NAME, size);
                 float height = FontUtil.getFontHeight(size);
 
-                GradientUtil.applyGradientHorizontal(0, 0, width, height, 1, color1, color2, () -> {
-                    FontUtil.drawString(CLIENT_NAME, 0, 0, size, Color.WHITE, true);
-                });
-                
                 int extraSize = (int) (size / 2.0);
-                String extraText = " | " + C.mc.getDebugFPS() + "fps | " + getPing() + "ms";
+                  String extraText = " | " + C.mc.getDebugFPS() + "fps | " + getPing() + "ms";
+
+                  // Simulated Glow
+                  for (int i = 7; i > 0; i--) {
+                      Color glowC = ColorUtil.interpolateColorsBackAndForth(15, 0, theme[0], theme[theme.length > 1 ? 1 : 0], false);
+                      com.github.scoliossis.utils.tenacity.render.RoundedUtil.drawRound(-i, -i, width + FontUtil.getStringWidth(extraText, extraSize) + (i*2), height + (i*2), 4, new Color(glowC.getRed(), glowC.getGreen(), glowC.getBlue(), 12));
+                  }
+
+                  GradientUtil.applyGradientHorizontal(0, 0, width, height, 1, color1, color2, () -> {
+                      FontUtil.drawString(CLIENT_NAME, 0, 0, size, Color.WHITE, true);
+                  });
                 FontUtil.drawString(extraText, width, height / 2f - FontUtil.getFontHeight(extraSize) / 2f, extraSize, Color.WHITE, true);
 
                 return new double[]{width + FontUtil.getStringWidth(extraText, extraSize), height};
