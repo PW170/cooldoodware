@@ -1,14 +1,10 @@
 package com.github.scoliossis.modules.impl.client;
 
-import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.render.FontUtil;
-import com.github.scoliossis.utils.render.RenderUtil;
 
 import java.awt.*;
 
-// Internal helper — no longer a user-facing module (hidden = true)
 @RegisterModule(
         name = "Theme",
         description = "Provides Theme functionality for the client.",
@@ -20,23 +16,18 @@ public class ThemeModule extends Module {
     public static boolean globalFont = false;
     public static int minecraftFontSize = 10;
 
-    // Gray colour — used by anything that previously referenced theme colours
-    private static final Color[] GRAY_COLOURS = {
-            new Color(150, 150, 150),
-            new Color(120, 120, 120)
-    };
-
-    public static Color customColour1 = new Color(150, 150, 150);
-    public static Color customColour2 = new Color(120, 120, 120);
-
     public static boolean shouldUseCustomFont() {
         return false;
     }
 
-    // Removed onClientTickEvent that repeatedly called setCurrentFont and caused a massive memory leak
+    @RegisterSubModule(name = "Color 1")
+    public static Color customColour1 = new Color(0, 150, 255);
+
+    @RegisterSubModule(name = "Color 2")
+    public static Color customColour2 = new Color(0, 255, 150);
 
     public static Color[] getThemeColours() {
-        return GRAY_COLOURS;
+        return new Color[]{customColour1, customColour2};
     }
 
     @Override

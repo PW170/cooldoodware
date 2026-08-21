@@ -24,14 +24,19 @@ import java.util.List;
 )
 public class ArrayListModule extends Module {
 
+    @RegisterSubModule(name = "Font Size", min = 10, max = 40, increment = 2)
+    public static double fontSize = 20;
+
     private static final HashMap<Module, DecelerateAnimation> moduleAnimations = new HashMap<>();
 
     @SubscribeEvent
     public static void onRenderTick(RenderTickEvent event) {
         if (!ModuleManager.isEnabled(ArrayListModule.class)) return;
 
+        int size = (int) fontSize;
+
         List<Module> activeModules = new ArrayList<>(ModuleManager.getModules());
-        activeModules.sort(Comparator.comparingDouble(m -> -FontUtil.getStringWidth(m.getAnnotation().name() + (!m.arrayListExtraInfo().isEmpty() ? " " + m.arrayListExtraInfo() : ""), 20)));
+        activeModules.sort(Comparator.comparingDouble(m -> -FontUtil.getStringWidth(m.getAnnotation().name() + (!m.arrayListExtraInfo().isEmpty() ? " " + m.arrayListExtraInfo() : ""), size)));
 
         ScaledResolution sr = new ScaledResolution(C.mc);
         float y = 5;
@@ -47,8 +52,8 @@ public class ArrayListModule extends Module {
             if (scale <= 0.01f) continue;
 
             String text = m.getAnnotation().name() + (!m.arrayListExtraInfo().isEmpty() ? " §7" + m.arrayListExtraInfo() : "");
-            float width = FontUtil.getStringWidth(text, 20);
-            float height = FontUtil.getFontHeight(20) + 4;
+            float width = FontUtil.getStringWidth(text, size);
+            float height = FontUtil.getFontHeight(size) + 4;
             float x = sr.getScaledWidth() - (width * scale) - 5;
 
             // Tenacity style background
@@ -58,7 +63,7 @@ public class ArrayListModule extends Module {
             Color c1 = ColorUtil.interpolateColorsBackAndForth(15, index * 20, theme[0], theme[theme.length > 1 ? 1 : 0], false);
             RenderUtil.drawRect(x + width, y, 2, height, c1);
             
-            FontUtil.drawString(text, x, y + 2, 20, c1, true);
+            FontUtil.drawString(text, x, y + 2, size, c1, true);
 
             y += height * scale;
             index++;

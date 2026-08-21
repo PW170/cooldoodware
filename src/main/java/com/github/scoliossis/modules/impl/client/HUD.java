@@ -1,12 +1,12 @@
 package com.github.scoliossis.modules.impl.client;
 
-import com.github.scoliossis.Main;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.render.FontUtil;
 import com.github.scoliossis.utils.render.draggable.Draggable;
 import com.github.scoliossis.utils.tenacity.render.GradientUtil;
 import java.awt.Color;
+import org.lwjgl.opengl.GL11;
 
 @RegisterModule(
         name = "HUD",
@@ -14,7 +14,12 @@ import java.awt.Color;
         category = Category.CLIENT
 )
 public class HUD extends Module {
-    private static final String CLIENT_NAME = "Tenacity"; // "Copy all visuals from tenacity source code completely"
+
+    @RegisterSubModule(name = "Client Name")
+    public static String CLIENT_NAME = "Coolware";
+
+    @RegisterSubModule(name = "Watermark Size", min = 10, max = 100, increment = 2)
+    public static double watermarkSize = 40;
 
     public static Draggable coolwareWatermark = new Draggable(
             "CoolWareWatermark",
@@ -23,17 +28,20 @@ public class HUD extends Module {
                 Color color1 = theme[0];
                 Color color2 = theme.length > 1 ? theme[1] : theme[0];
 
-                float width = FontUtil.getStringWidth(CLIENT_NAME, 40);
-                float height = FontUtil.getFontHeight(40);
+                int size = (int) watermarkSize;
+
+                float width = FontUtil.getStringWidth(CLIENT_NAME, size);
+                float height = FontUtil.getFontHeight(size);
 
                 GradientUtil.applyGradientHorizontal(0, 0, width, height, 1, color1, color2, () -> {
-                    FontUtil.drawString(CLIENT_NAME, 0, 0, 40, Color.WHITE, true);
+                    FontUtil.drawString(CLIENT_NAME, 0, 0, size, Color.WHITE, true);
                 });
                 
+                int extraSize = (int) (size / 2.0);
                 String extraText = " | " + C.mc.getDebugFPS() + "fps";
-                FontUtil.drawString(extraText, width, height / 2f - FontUtil.getFontHeight(20) / 2f, 20, Color.WHITE, true);
+                FontUtil.drawString(extraText, width, height / 2f - FontUtil.getFontHeight(extraSize) / 2f, extraSize, Color.WHITE, true);
 
-                return new double[]{width + FontUtil.getStringWidth(extraText, 20), height};
+                return new double[]{width + FontUtil.getStringWidth(extraText, extraSize), height};
             },
             e -> ModuleManager.isEnabled(HUD.class),
             e -> true
