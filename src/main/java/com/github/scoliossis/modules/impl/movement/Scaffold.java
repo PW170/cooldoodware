@@ -296,13 +296,16 @@ public class Scaffold extends Module {
         targetBlock = getBestTargetBlock(positionToRotateFrom);
         if (targetBlock == null) return;
 
-        if (shouldTelly() && C.p().onGround && (tellyBlockPlaced || tellyMode.getTellyForwardTicks() == 0)) {
+        boolean isKeepYTelly = (keepY == KeepYMode.Telly || keepY == KeepYMode.ExtraTelly);
+        if ((shouldTelly() || isKeepYTelly) && C.p().onGround && (tellyBlockPlaced || tellyMode.getTellyForwardTicks() == 0 || isKeepYTelly)) {
             tellyTicksCounter = 0;
             tellyPlaceDelayCounter = 0;
         }
 
-        tellyTicksCounter++;
-        if (tellyTicksCounter <= tellyMode.getTellyTicks()) return;
+        if (shouldTelly() || isKeepYTelly) {
+            tellyTicksCounter++;
+            if (tellyTicksCounter <= tellyMode.getTellyTicks()) return;
+        }
 
         tellyPlaceDelayCounter++;
 
