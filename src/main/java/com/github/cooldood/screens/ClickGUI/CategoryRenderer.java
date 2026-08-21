@@ -7,7 +7,7 @@ import com.github.cooldood.utils.render.RenderUtil;
 import java.awt.Color;
 
 public class CategoryRenderer {
-    public final int CATEGORY_HEIGHT = 20;
+    public final int CATEGORY_HEIGHT = 33;
     protected Category currentDraggingCategory = null;
     private float categoryDragStartX = -1;
     private float categoryDragStartY = -1;
@@ -23,22 +23,25 @@ public class CategoryRenderer {
         String name = category.name().replaceAll("_", " ");
         String categoryName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
 
-        float textH = FontUtil.getFontHeight(ClickGUIScreen.fontSize);
+        float textH = FontUtil.getFontHeight(ClickGUIScreen.fontSize + 2);
         float textY = y + h / 2f - textH / 2f + 1f;
 
-        // Draw an icon placeholder or just the text
+        // Roughly 16-18px font for header
+        FontUtil.drawString(categoryName, x + 30, textY, ClickGUIScreen.fontSize + 4, Color.WHITE, true);
+        
+        // Pseudo icon at left
         String icon = "";
         switch (categoryName) {
-            case "Combat": icon = "b"; break;
-            case "Movement": icon = "m"; break;
-            case "Player": icon = "p"; break;
-            case "Exploits": icon = "e"; break;
-            case "Visuals": icon = "v"; break;
-            case "Misc": icon = "c"; break;
-            case "Configs": icon = "s"; break;
+            case "Combat": icon = "⚔"; break;
+            case "Movement": icon = "👟"; break;
+            case "Player": icon = "👤"; break;
+            case "Exploits": icon = "✨"; break;
+            case "Visuals": icon = "👁"; break;
+            case "Misc": icon = "⚙"; break;
+            case "Client": icon = "💻"; break;
+            default: icon = "·"; break;
         }
-
-        FontUtil.drawString(icon + "  " + categoryName, x + 6, textY, ClickGUIScreen.fontSize, Color.WHITE, false);
+        FontUtil.drawString(icon, x + 8, textY, ClickGUIScreen.fontSize + 4, Color.WHITE, false);
     }
 
     public void handleMouse(Category category, int mouseX, int mouseY) {

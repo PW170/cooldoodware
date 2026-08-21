@@ -14,7 +14,6 @@ import com.github.cooldood.utils.render.FontUtil;
 import com.github.cooldood.utils.render.RenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.MathHelper;
 import org.apache.commons.io.FileUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -30,14 +29,17 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ClickGUIScreen extends GuiScreen {
-    public static final int fontSize = 9;
-    public static int GUI_TAB_WIDTH = 110;
+    public static final int fontSize = 10;
+    // User requested ~200px width
+    public static int GUI_TAB_WIDTH = 200;
 
-    public static final int BASE_X = -GUI_TAB_WIDTH / 2;
+    public static final int BASE_X = 0; // we apply renderX via translation
     public static final int BASE_Y = 0;
 
-    public static final Color COL_BLUE = new Color(0, 163, 255);
-    public static final Color COL_BG = new Color(20, 20, 20, 220);
+    // Bright cyan/blue
+    public static final Color COL_BLUE = new Color(8, 169, 232); 
+    // Translucent dark-red/black
+    public static final Color COL_BG = new Color(30, 10, 15, 180);
 
     public static float fpsMultiplier = 1;
     public static boolean leftMouseDown = false;
@@ -51,7 +53,20 @@ public class ClickGUIScreen extends GuiScreen {
     public static final ModuleRenderer moduleRenderer = new ModuleRenderer();
 
     @Override
-    public void initGui() {}
+    public void initGui() {
+        if (Main.extraSavedFeaturesPath == null) return;
+        loadCategoryPositions();
+        
+        // Setup initial default positions if they are bunched up at 0,0
+        if (Category.values()[0].posX == 0 && Category.values()[1].posX == 0) {
+            float startX = 28;
+            for (Category cat : Category.values()) {
+                cat.posX = cat.renderX = startX;
+                cat.posY = cat.renderY = 0;
+                startX += GUI_TAB_WIDTH + 14; // 12-15px gap
+            }
+        }
+    }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -80,33 +95,41 @@ public class ClickGUIScreen extends GuiScreen {
             category.renderY += (category.posY - category.renderY) / fpsMultiplier;
             if (Math.abs(category.renderY - category.posY) < 0.01) category.renderY = category.posY;
 
-            GL11.glTranslated(category.renderX - BASE_X, category.renderY - BASE_Y, 0);
+            GL11.glTranslated(category.renderX, category.renderY, 0);
 
             categoryRenderer.handleMouse(category, mouseX, mouseY);
             categoryRenderer.render(category);
 
-            RenderUtil.glScissor(BASE_X, BASE_Y + categoryRenderer.CATEGORY_HEIGHT,
+            RenderUtil.glScissor(category.renderX, category.renderY + categoryRenderer.CATEGORY_HEIGHT,
                     GUI_TAB_WIDTH, C.res().getScaledHeight());
 
             category.renderScroll += (category.scroll - category.renderScroll) / fpsMultiplier;
             if (Math.abs(category.scroll - category.renderScroll) < 0.01) category.renderScroll = category.scroll;
 
             GL11.glTranslated(0, category.renderScroll, 0);
-            GL11.glTranslated(0, categoryRenderer.CATEGORY_HEIGHT, 0);
+            GL11.glTranslated(0, categoryRenderer.CATEGORY_HEIGHT + 5, 0); // 5-10px spacing
 
-            // Calculate total height first for background
-            float totalHeight = 0;
+            float totalHeight = 5; // Start with the spacing
             for (Module module : modulesInCategory) {
-                float h = 16;
+                float h = 29; // 28-31px row height
                 if (module.isOpen()) {
                     for (SubModule subModule : module.getChildren()) {
-                        if (subModule.shouldRender()) h += 16;
+                        if (subModule.shouldRender()) {
+                            Class<?> type = subModule.getField().getType();
+                            if (type == com.github.cooldood.modules.SubCategory.class) {
+                                h += 24;
+                            } else if (type == int.class || type == double.class || type == float.class || type == long.class) {
+                                h += 25;
+                            } else {
+                                h += 22;
+                            }
+                        }
                     }
                 }
                 totalHeight += h;
             }
 
-            RenderUtil.drawRect(BASE_X, BASE_Y, GUI_TAB_WIDTH, totalHeight, COL_BG);
+            RenderUtil.drawRect(BASE_X, BASE_Y - 5, GUI_TAB_WIDTH, totalHeight, COL_BG);
 
             float currentY = BASE_Y;
             for (Module module : modulesInCategory) {
@@ -119,7 +142,7 @@ public class ClickGUIScreen extends GuiScreen {
             }
             if (category.scroll > 0) category.scroll = 0;
 
-            GL11.glDisable(GL11.GL_SCISSOR_TEST);;
+            GL11.glDisable(GL11.GL_SCISSOR_TEST);
             GL11.glPopMatrix();
         }
 
