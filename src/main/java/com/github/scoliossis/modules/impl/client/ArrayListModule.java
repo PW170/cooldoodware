@@ -68,18 +68,18 @@ public class ArrayListModule extends Module {
 
                     String text = m.getAnnotation().name() + (!m.arrayListExtraInfo().isEmpty() ? " \u00a77" + m.arrayListExtraInfo() : "");
                     float width = FontUtil.getStringWidth(text, size);
-                    float height = FontUtil.getFontHeight(size) + 4;
+                    float height = FontUtil.getFontHeight(size) + 1;
                     
                     float x = maxWidth - (width * scale);
 
                     // Tenacity style background
                     RenderUtil.drawRect(x - 2, y, width + 4, height, new Color(0, 0, 0, 120));
                     
-                    // Side bar
                     Color c1 = ColorUtil.interpolateColorsBackAndForth(15, index * 20, theme[0], theme[theme.length > 1 ? 1 : 0], false);
-                    RenderUtil.drawRect(x + width, y, 2, height, c1);
                     
-                    FontUtil.drawString(text, x, y + 2, size, c1, true);
+                    // Double strike to make it bold
+                    FontUtil.drawString(text, x + 0.5f, y + 1, size, c1, true);
+                    FontUtil.drawString(text, x, y + 1, size, c1, true);
 
                     y += height * scale;
                     index++;
